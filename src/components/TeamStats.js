@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
@@ -21,6 +21,17 @@ ChartJS.register(
 );
 
 function TeamStats({ matches }) {
+  // Add state for filters
+  const [offensiveFilters, setOffensiveFilters] = useState({
+    auto: true,
+    teleop: true,
+    endgame: true,
+    efficiency: true
+  });
+  
+  // Add state for selected team modal
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  
   // Skip if no matches
   if (!matches || matches.length === 0) {
     return (
@@ -42,58 +53,136 @@ function TeamStats({ matches }) {
   const teamStats = teamNumbers.map(teamNumber => {
     const teamMatches = matches.filter(match => match.matchInfo?.teamNumber === teamNumber);
     
-    // Calculate averages
+    // Calculate averages for overall stats
     const avgAutoPoints = calculateAverage(teamMatches, 'scores.autoPoints');
     const avgTeleopPoints = calculateAverage(teamMatches, 'scores.teleopPoints');
     const avgBargePoints = calculateAverage(teamMatches, 'scores.bargePoints');
     const avgTotalPoints = calculateAverage(teamMatches, 'scores.totalPoints');
+    
+    // Calculate detailed averages for modal
+    // Auto
+    const avgAutoCoralLevel1 = calculateAverage(teamMatches, 'autonomous.coralLevel1');
+    const avgAutoCoralLevel2 = calculateAverage(teamMatches, 'autonomous.coralLevel2');
+    const avgAutoCoralLevel3 = calculateAverage(teamMatches, 'autonomous.coralLevel3');
+    const avgAutoCoralLevel4 = calculateAverage(teamMatches, 'autonomous.coralLevel4');
+    const avgAutoAlgaeProcessor = calculateAverage(teamMatches, 'autonomous.algaeProcessor');
+    const avgAutoAlgaeNet = calculateAverage(teamMatches, 'autonomous.algaeNet');
+    const mobilityPercentage = calculatePercentage(teamMatches, 'autonomous.mobility');
+    
+    // Teleop
+    const avgTeleopCoralLevel1 = calculateAverage(teamMatches, 'teleop.coralLevel1');
+    const avgTeleopCoralLevel2 = calculateAverage(teamMatches, 'teleop.coralLevel2');
+    const avgTeleopCoralLevel3 = calculateAverage(teamMatches, 'teleop.coralLevel3');
+    const avgTeleopCoralLevel4 = calculateAverage(teamMatches, 'teleop.coralLevel4');
+    const avgTeleopAlgaeProcessor = calculateAverage(teamMatches, 'teleop.algaeProcessor');
+    const avgTeleopAlgaeNet = calculateAverage(teamMatches, 'teleop.algaeNet');
+    const avgTeleopAlgaeDescored = calculateAverage(teamMatches, 'teleop.algaeDescored');
+    
+    // Endgame
+    const robotParkedPercentage = calculatePercentage(teamMatches, 'endgame.robotParked');
+    const shallowCageClimbPercentage = calculatePercentage(teamMatches, 'endgame.shallowCageClimb');
+    const deepCageClimbPercentage = calculatePercentage(teamMatches, 'endgame.deepCageClimb');
+    
+    // Additional stats
+    const playedDefensePercentage = calculatePercentage(teamMatches, 'additional.playedDefense');
+    const avgDefenseRating = calculateAverage(teamMatches.filter(match => match.additional?.playedDefense), 'additional.defenseRating');
+    const avgDriverSkill = calculateAverage(teamMatches, 'additional.driverSkill');
+    const avgRobotSpeed = calculateAverage(teamMatches, 'additional.robotSpeed');
+    const robotDiedPercentage = calculatePercentage(teamMatches, 'additional.robotDied');
+    const robotTippedPercentage = calculatePercentage(teamMatches, 'additional.robotTipped');
     
     // Calculate offensive efficiency (points per match)
     const offensiveEfficiency = avgTotalPoints;
     
     // Calculate defensive efficiency (average defense rating)
     const defenseMatches = teamMatches.filter(match => match.additional?.playedDefense);
-    const avgDefenseRating = calculateAverage(defenseMatches, 'additional.defenseRating');
     const defenseCount = defenseMatches.length;
     
     return {
       teamNumber,
       matchCount: teamMatches.length,
+      // Overall stats
       avgAutoPoints,
       avgTeleopPoints,
       avgBargePoints,
       avgTotalPoints,
       offensiveEfficiency,
       avgDefenseRating,
-      defenseCount
+      defenseCount,
+      // Detailed stats for modal
+      auto: {
+        coralLevel1: avgAutoCoralLevel1,
+        coralLevel2: avgAutoCoralLevel2,
+        coralLevel3: avgAutoCoralLevel3,
+        coralLevel4: avgAutoCoralLevel4,
+        algaeProcessor: avgAutoAlgaeProcessor,
+        algaeNet: avgAutoAlgaeNet,
+        mobility: mobilityPercentage
+      },
+      teleop: {
+        coralLevel1: avgTeleopCoralLevel1,
+        coralLevel2: avgTeleopCoralLevel2,
+        coralLevel3: avgTeleopCoralLevel3,
+        coralLevel4: avgTeleopCoralLevel4,
+        algaeProcessor: avgTeleopAlgaeProcessor,
+        algaeNet: avgTeleopAlgaeNet,
+        algaeDescored: avgTeleopAlgaeDescored
+      },
+      endgame: {
+        robotParked: robotParkedPercentage,
+        shallowCageClimb: shallowCageClimbPercentage,
+        deepCageClimb: deepCageClimbPercentage
+      },
+      additional: {
+        playedDefense: playedDefensePercentage,
+        defenseRating: avgDefenseRating,
+        driverSkill: avgDriverSkill,
+        robotSpeed: avgRobotSpeed,
+        robotDied: robotDiedPercentage,
+        robotTipped: robotTippedPercentage
+      }
     };
   });
 
-  // Prepare data for offensive chart
+  // Create filtered datasets based on selected filters
+  const filteredDatasets = [];
+  
+  if (offensiveFilters.auto) {
+    filteredDatasets.push({
+      label: 'Auto',
+      data: teamStats.map(stat => stat.avgAutoPoints),
+      backgroundColor: 'rgba(255, 99, 132, 0.8)', // Less transparent red
+    });
+  }
+  
+  if (offensiveFilters.teleop) {
+    filteredDatasets.push({
+      label: 'Teleop',
+      data: teamStats.map(stat => stat.avgTeleopPoints),
+      backgroundColor: 'rgba(54, 162, 235, 0.8)', // Less transparent blue
+    });
+  }
+  
+  if (offensiveFilters.endgame) {
+    filteredDatasets.push({
+      label: 'Endgame',
+      data: teamStats.map(stat => stat.avgBargePoints),
+      backgroundColor: 'rgba(75, 192, 192, 0.8)', // Less transparent teal
+    });
+  }
+  
+  if (offensiveFilters.efficiency) {
+    filteredDatasets.push({
+      label: 'Offensive Efficiency',
+      data: teamStats.map(stat => stat.offensiveEfficiency),
+      backgroundColor: 'rgba(153, 102, 255, 0.8)', // Less transparent purple
+    });
+  }
+
+  // Prepare data for offensive chart with filtered datasets
   const offensiveChartData = {
     labels: teamStats.map(stat => stat.teamNumber),
-    datasets: [
-      {
-        label: 'Auto',
-        data: teamStats.map(stat => stat.avgAutoPoints),
-        backgroundColor: 'rgba(255, 99, 132, 0.8)', // Less transparent red
-      },
-      {
-        label: 'Teleop',
-        data: teamStats.map(stat => stat.avgTeleopPoints),
-        backgroundColor: 'rgba(54, 162, 235, 0.8)', // Less transparent blue
-      },
-      {
-        label: 'Endgame',
-        data: teamStats.map(stat => stat.avgBargePoints),
-        backgroundColor: 'rgba(75, 192, 192, 0.8)', // Less transparent teal
-      },
-      {
-        label: 'Offensive Efficiency',
-        data: teamStats.map(stat => stat.offensiveEfficiency),
-        backgroundColor: 'rgba(153, 102, 255, 0.8)', // Less transparent purple
-      },
-    ],
+    datasets: filteredDatasets,
   };
 
   // Prepare data for defensive chart
@@ -114,10 +203,6 @@ function TeamStats({ matches }) {
     plugins: {
       legend: {
         position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Average Points by Team',
       },
       tooltip: {
         callbacks: {
@@ -155,10 +240,6 @@ function TeamStats({ matches }) {
       legend: {
         position: 'top',
       },
-      title: {
-        display: true,
-        text: 'Average Defense Rating by Team',
-      },
       tooltip: {
         callbacks: {
           label: function(context) {
@@ -190,10 +271,70 @@ function TeamStats({ matches }) {
       }
     }
   };
+  
+  // Handle filter changes
+  const toggleFilter = (filter) => {
+    setOffensiveFilters(prev => ({
+      ...prev,
+      [filter]: !prev[filter]
+    }));
+  };
+  
+  // Handle team card click
+  const handleTeamCardClick = (team) => {
+    setSelectedTeam(team);
+  };
+  
+  // Close modal
+  const closeModal = () => {
+    setSelectedTeam(null);
+  };
 
   return (
     <div className="team-stats">
       <h3>Team Statistics</h3>
+      
+      {/* Offensive Chart Filters */}
+      <div className="chart-filters">
+        <div className="filter-title">Show:</div>
+        <div className="filter-options">
+          <label className={`filter-option ${offensiveFilters.auto ? 'active' : ''}`}>
+            <input 
+              type="checkbox" 
+              checked={offensiveFilters.auto} 
+              onChange={() => toggleFilter('auto')} 
+            />
+            <span className="filter-label auto">Auto</span>
+          </label>
+          
+          <label className={`filter-option ${offensiveFilters.teleop ? 'active' : ''}`}>
+            <input 
+              type="checkbox" 
+              checked={offensiveFilters.teleop} 
+              onChange={() => toggleFilter('teleop')} 
+            />
+            <span className="filter-label teleop">Teleop</span>
+          </label>
+          
+          <label className={`filter-option ${offensiveFilters.endgame ? 'active' : ''}`}>
+            <input 
+              type="checkbox" 
+              checked={offensiveFilters.endgame} 
+              onChange={() => toggleFilter('endgame')} 
+            />
+            <span className="filter-label endgame">Endgame</span>
+          </label>
+          
+          <label className={`filter-option ${offensiveFilters.efficiency ? 'active' : ''}`}>
+            <input 
+              type="checkbox" 
+              checked={offensiveFilters.efficiency} 
+              onChange={() => toggleFilter('efficiency')} 
+            />
+            <span className="filter-label efficiency">Off. Efficiency</span>
+          </label>
+        </div>
+      </div>
       
       {/* Offensive Chart */}
       <div className="chart-container">
@@ -210,7 +351,11 @@ function TeamStats({ matches }) {
       {/* Team Stats Cards */}
       <div className="team-stats-cards">
         {teamStats.map(stats => (
-          <div key={stats.teamNumber} className="team-stat-card">
+          <div 
+            key={stats.teamNumber} 
+            className="team-stat-card" 
+            onClick={() => handleTeamCardClick(stats)}
+          >
             <h3 className="team-number">Team {stats.teamNumber}</h3>
             <p className="match-count">{stats.matchCount} matches</p>
             
@@ -247,12 +392,156 @@ function TeamStats({ matches }) {
           </div>
         ))}
       </div>
+      
+      {/* Detailed Team Stats Modal */}
+      {selectedTeam && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Team {selectedTeam.teamNumber} Detailed Stats</h2>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <p className="match-count">{selectedTeam.matchCount} matches analyzed</p>
+              
+              <div className="stats-explanation">
+                <p><strong>Note:</strong> Numbers show average per match. Percentages show how often the team successfully completed an action.</p>
+              </div>
+              
+              <div className="detailed-stats">
+                <div className="detailed-section auto">
+                  <h3>Autonomous Period</h3>
+                  <div className="detailed-grid">
+                    <div className="detailed-item">
+                      <div className="detailed-label">Mobility</div>
+                      <div className="detailed-value">{selectedTeam.auto.mobility.toFixed(1)}% of matches</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 1</div>
+                      <div className="detailed-value">{selectedTeam.auto.coralLevel1.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 2</div>
+                      <div className="detailed-value">{selectedTeam.auto.coralLevel2.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 3</div>
+                      <div className="detailed-value">{selectedTeam.auto.coralLevel3.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 4</div>
+                      <div className="detailed-value">{selectedTeam.auto.coralLevel4.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Algae Processor</div>
+                      <div className="detailed-value">{selectedTeam.auto.algaeProcessor.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Algae Net</div>
+                      <div className="detailed-value">{selectedTeam.auto.algaeNet.toFixed(2)} avg</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="detailed-section teleop">
+                  <h3>Teleop Period</h3>
+                  <div className="detailed-grid">
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 1</div>
+                      <div className="detailed-value">{selectedTeam.teleop.coralLevel1.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 2</div>
+                      <div className="detailed-value">{selectedTeam.teleop.coralLevel2.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 3</div>
+                      <div className="detailed-value">{selectedTeam.teleop.coralLevel3.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Coral Level 4</div>
+                      <div className="detailed-value">{selectedTeam.teleop.coralLevel4.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Algae Processor</div>
+                      <div className="detailed-value">{selectedTeam.teleop.algaeProcessor.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Algae Net</div>
+                      <div className="detailed-value">{selectedTeam.teleop.algaeNet.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Algae Descored</div>
+                      <div className="detailed-value">{selectedTeam.teleop.algaeDescored.toFixed(2)} avg</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="detailed-section endgame">
+                  <h3>Endgame</h3>
+                  <div className="detailed-grid">
+                    <div className="detailed-item">
+                      <div className="detailed-label">Robot Parked</div>
+                      <div className="detailed-value">{selectedTeam.endgame.robotParked.toFixed(1)}% of matches</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Shallow Cage Climb</div>
+                      <div className="detailed-value">{selectedTeam.endgame.shallowCageClimb.toFixed(1)}% of matches</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Deep Cage Climb</div>
+                      <div className="detailed-value">{selectedTeam.endgame.deepCageClimb.toFixed(1)}% of matches</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="detailed-section additional">
+                  <h3>Additional Stats</h3>
+                  <div className="detailed-grid">
+                    <div className="detailed-item">
+                      <div className="detailed-label">Played Defense</div>
+                      <div className="detailed-value">{selectedTeam.additional.playedDefense.toFixed(1)}% of matches</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Defense Rating</div>
+                      <div className="detailed-value">
+                        {selectedTeam.defenseCount > 0 
+                          ? `${selectedTeam.additional.defenseRating.toFixed(1)} avg` 
+                          : 'N/A'}
+                      </div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Driver Skill</div>
+                      <div className="detailed-value">{selectedTeam.additional.driverSkill.toFixed(1)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Robot Speed</div>
+                      <div className="detailed-value">{selectedTeam.additional.robotSpeed.toFixed(1)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Robot Died</div>
+                      <div className="detailed-value">{selectedTeam.additional.robotDied.toFixed(1)}% of matches</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Robot Tipped</div>
+                      <div className="detailed-value">{selectedTeam.additional.robotTipped.toFixed(1)}% of matches</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // Helper function to calculate average of a nested property
 function calculateAverage(matches, propertyPath) {
+  if (!matches || matches.length === 0) return 0;
+  
   const parts = propertyPath.split('.');
   
   const sum = matches.reduce((total, match) => {
@@ -265,6 +554,24 @@ function calculateAverage(matches, propertyPath) {
   }, 0);
   
   return matches.length > 0 ? sum / matches.length : 0;
+}
+
+// Helper function to calculate percentage of boolean properties
+function calculatePercentage(matches, propertyPath) {
+  if (!matches || matches.length === 0) return 0;
+  
+  const parts = propertyPath.split('.');
+  
+  const count = matches.reduce((total, match) => {
+    let value = match;
+    for (const part of parts) {
+      value = value?.[part];
+      if (value === undefined) return total;
+    }
+    return total + (value ? 1 : 0);
+  }, 0);
+  
+  return (count / matches.length) * 100;
 }
 
 export default TeamStats;
