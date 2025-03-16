@@ -98,6 +98,14 @@ function TeamStats({ matches }) {
     const defenseMatches = teamMatches.filter(match => match.additional?.playedDefense);
     const defenseCount = defenseMatches.length;
     
+    // Collect all notes for this team
+    const scouterNotes = teamMatches
+      .filter(match => match.additional?.notes)
+      .map(match => ({
+        matchNumber: match.matchInfo?.matchNumber || 'Unknown Match',
+        notes: match.additional?.notes
+      }));
+    
     return {
       teamNumber,
       matchCount: teamMatches.length,
@@ -140,7 +148,9 @@ function TeamStats({ matches }) {
         robotSpeed: avgRobotSpeed,
         robotDied: robotDiedPercentage,
         robotTipped: robotTippedPercentage
-      }
+      },
+      // Add scouter notes to the team stats
+      scouterNotes,
     };
   });
 
@@ -528,6 +538,23 @@ function TeamStats({ matches }) {
                       <div className="detailed-value">{selectedTeam.additional.robotTipped.toFixed(1)}% of matches</div>
                     </div>
                   </div>
+                </div>
+                
+                {/* Scouter Notes Section */}
+                <div className="detailed-section notes">
+                  <h3>Scouter Notes</h3>
+                  {selectedTeam.scouterNotes && selectedTeam.scouterNotes.length > 0 ? (
+                    <div className="notes-container">
+                      {selectedTeam.scouterNotes.map((note, index) => (
+                        <div key={index} className="note-item">
+                          <div className="note-match"><strong>Match {note.matchNumber}:</strong></div>
+                          <div className="note-text">{note.notes}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="no-notes">No scouter notes available for this team.</p>
+                  )}
                 </div>
               </div>
             </div>
