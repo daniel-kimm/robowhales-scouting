@@ -515,34 +515,40 @@ function ScoutingForm() {
           <div className="form-group">
             <div className="checkbox-group">
               <label>
+                <strong>
                 <input 
                   type="checkbox" 
                   checked={formData.additional.robotDied}
                   onChange={(e) => handleInputChange('additional', 'robotDied', e.target.checked)}
                 />
                 Robot Died/Immobilized
+                </strong>
               </label>
             </div>
             
             <div className="checkbox-group">
               <label>
+                <strong>
                 <input 
                   type="checkbox" 
                   checked={formData.additional.robotTipped}
                   onChange={(e) => handleInputChange('additional', 'robotTipped', e.target.checked)}
                 />
                 Robot Tipped Over
+                </strong>
               </label>
             </div>
             
             <div className="checkbox-group">
               <label>
+                <strong>
                 <input 
                   type="checkbox" 
                   checked={formData.additional.playedDefense}
                   onChange={handlePlayedDefenseChange}
                 />
                 Played Defense
+                </strong>
               </label>
             </div>
           </div>
