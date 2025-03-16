@@ -1,15 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ScoutingForm from './components/ScoutingForm';
 import DataAnalysis from './components/DataAnalysis';
 import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const correctPassword = 'fellowshipOFtheWHALE9032';
+  
+  useEffect(() => {
+    // Check if user is already authenticated
+    const authenticated = localStorage.getItem('passwordAuthenticated') === 'true';
+    setIsAuthenticated(authenticated);
+    console.log("Authentication check:", authenticated);
+  }, []);
+  
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    console.log("Password submitted:", password);
+    
+    if (password === correctPassword) {
+      console.log("Password correct!");
+      localStorage.setItem('passwordAuthenticated', 'true');
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      console.log("Password incorrect!");
+      setError('Incorrect password. Please try again.');
+    }
+  };
+  
+  // Simple password page
+  if (!isAuthenticated) {
+    return (
+      <div className="password-protection">
+        <div className="password-container">
+          <h1 className="app-title">robowhales team 9032</h1>
+          <h2>Scouting App</h2>
+          <p>Please enter the password to access the scouting app:</p>
+          
+          <form onSubmit={handlePasswordSubmit}>
+            <div className="form-group">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                className="password-input"
+                autoFocus
+              />
+            </div>
+            
+            {error && <div className="error-message">{error}</div>}
+            
+            <button type="submit" className="submit-btn">
+              Enter
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+  
+  // Main app content
   return (
     <Router>
       <div className="app">
         <header className="app-header">
-          <h1 className="app-title">robowhales|9032</h1>
+          <h1 className="app-title">robowhales team 9032</h1>
           <nav>
             <Link to="/">Scouting Form</Link>
             <Link to="/analysis">Data Analysis</Link>
