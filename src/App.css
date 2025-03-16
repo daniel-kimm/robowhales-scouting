@@ -489,6 +489,7 @@ textarea.full-width {
   align-items: center;
   min-height: 100vh;
   background-color: #f0f8ff; /* Light blue background */
+  padding: 20px;
 }
 
 .password-container {
@@ -496,9 +497,30 @@ textarea.full-width {
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
-  width: 90%;
+  width: 100%;
   max-width: 400px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.password-container h1 {
+  margin-bottom: 10px;
+}
+
+.password-container h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #0066cc;
+}
+
+.password-container p {
+  margin-bottom: 20px;
+}
+
+.password-container form {
+  width: 100%;
 }
 
 .password-input {
@@ -508,6 +530,7 @@ textarea.full-width {
   border: 2px solid #0066cc;
   border-radius: 4px;
   font-size: 16px;
+  box-sizing: border-box;
 }
 
 .error-message {
@@ -527,8 +550,14 @@ textarea.full-width {
   cursor: pointer;
   transition: background-color 0.3s;
   width: 100%;
+  margin-top: 10px;
 }
 
 .password-protection .submit-btn:hover {
   background-color: #004c99;
+}
+
+/* Ensure form group is full width */
+.password-protection .form-group {
+  width: 100%;
 }
