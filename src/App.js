@@ -76,7 +76,7 @@ function App() {
     <Router>
       <div className="app">
         <header className="app-header">
-          <h1 className="app-title">robowhales team 9032</h1>
+          <h1 className="app-title">robowhales|9032</h1>
           <nav>
             <Link to="/">Scouting Form</Link>
             <Link to="/analysis">Data Analysis</Link>
