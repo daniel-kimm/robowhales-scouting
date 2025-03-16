@@ -44,7 +44,7 @@ function App() {
     return (
       <div className="password-protection">
         <div className="password-container">
-          <h1 className="app-title">robowhales team 9032</h1>
+          <h1 className="app-title">robowhales|9032</h1>
           <h2>Scouting App</h2>
           <p>Please enter the password to access the scouting app:</p>
           
