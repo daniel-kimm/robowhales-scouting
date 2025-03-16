@@ -24,7 +24,8 @@ function ScoutingForm() {
       coralLevel3: 0,
       coralLevel4: 0,
       algaeProcessor: 0,
-      algaeNet: 0
+      algaeNet: 0,
+      algaeDescored: 0
     },
     endgame: {
       robotParked: false,
@@ -208,7 +209,8 @@ function ScoutingForm() {
         coralLevel3: 0,
         coralLevel4: 0,
         algaeProcessor: 0,
-        algaeNet: 0
+        algaeNet: 0,
+        algaeDescored: 0
       },
       endgame: {
         robotParked: false,
@@ -412,12 +414,21 @@ function ScoutingForm() {
               label="Processor (6 pts):" 
               value={formData.teleop.algaeProcessor}
               onChange={(value) => handleInputChange('teleop', 'algaeProcessor', value)}
+              field="algaeProcessor"
             />
             
             <Counter 
               label="Net (4 pts):" 
               value={formData.teleop.algaeNet}
               onChange={(value) => handleInputChange('teleop', 'algaeNet', value)}
+              field="algaeNet"
+            />
+            
+            <Counter 
+              label="Descored:" 
+              value={formData.teleop.algaeDescored}
+              onChange={(value) => handleInputChange('teleop', 'algaeDescored', value)}
+              field="algaeDescored"
             />
           </div>
           
