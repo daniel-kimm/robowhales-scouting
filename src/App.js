@@ -1,24 +1,33 @@
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ScoutingForm from './components/ScoutingForm';
+import DataAnalysis from './components/DataAnalysis';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="app">
+        <header className="app-header">
+          <h1 className="app-title">robowhales|9032</h1>
+          <nav>
+            <Link to="/">Scouting Form</Link>
+            <Link to="/analysis">Data Analysis</Link>
+          </nav>
+        </header>
+        
+        <main>
+          <Routes>
+            <Route path="/" element={<ScoutingForm />} />
+            <Route path="/analysis" element={<DataAnalysis />} />
+          </Routes>
+        </main>
+        
+        <footer>
+          <p>© {new Date().getFullYear()} RoboWhales FRC Team 9032, Cary, NC</p>
+        </footer>
+      </div>
+    </Router>
   );
 }
 
