@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ScoutingForm from './components/ScoutingForm';
 import DataAnalysis from './components/DataAnalysis';
+import ChatBot from './components/ChatBot';
 import './App.css';
 
 function App() {
@@ -80,6 +81,7 @@ function App() {
           <nav>
             <Link to="/">Scouting Form</Link>
             <Link to="/analysis">Data Analysis</Link>
+            <Link to="/assistant">Scout Assistant</Link>
           </nav>
         </header>
         
@@ -87,6 +89,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ScoutingForm />} />
             <Route path="/analysis" element={<DataAnalysis />} />
+            <Route path="/assistant" element={<ChatBot />} />
           </Routes>
         </main>
         
