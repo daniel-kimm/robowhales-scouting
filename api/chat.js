@@ -1,0 +1,108 @@
+import { Configuration, OpenAIApi } from 'openai';
+import { retrieveRelevantData } from '../src/utils/ragSystem';
+import { initializeApp } from 'firebase/app';
+
+// Initialize Firebase (you'll need to replace with your config)
+const firebaseConfig = {
+    apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+    authDomain: "robowhales-scouting.firebaseapp.com",
+    projectId: "robowhales-scouting",
+    storageBucket: "robowhales-scouting.firebasestorage.app",
+    messagingSenderId: "94724192757",
+    appId: "1:94724192757:web:270a356595fdddc54b08bc",
+    measurementId: "G-RW32SXHSRX"
+  };
+
+// Initialize Firebase with error handling
+try {
+  initializeApp(firebaseConfig);
+} catch (error) {
+  // If Firebase is already initialized, this will prevent the app from crashing
+  if (!/already exists/.test(error.message)) {
+    console.error('Firebase initialization error', error.stack);
+  }
+}
+
+// Initialize OpenAI
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { message, conversationHistory = [] } = req.body;
+    
+    // Retrieve relevant data based on the user's query
+    console.log("Retrieving data for query:", message);
+    const relevantData = await retrieveRelevantData(message);
+    console.log("Retrieved data for teams:", Object.keys(relevantData.teams));
+    
+    // Generate a response using OpenAI
+    const aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
+    
+    return res.status(200).json({ 
+      response: aiResponse,
+      context: {
+        teamsAnalyzed: Object.keys(relevantData.teams),
+        matchesAnalyzed: relevantData.matches.map(m => m.matchInfo?.matchNumber).filter(Boolean),
+        intent: relevantData.queryContext?.intent
+      }
+    });
+  } catch (error) {
+    console.error('Error processing chat request:', error);
+    return res.status(500).json({ 
+      error: 'An error occurred while processing your request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
+
+async function generateAIResponse(message, relevantData, conversationHistory) {
+  // Format the data for the AI
+  const formattedData = JSON.stringify(relevantData, null, 2);
+  
+  const systemPrompt = `
+    You are an FRC (FIRST Robotics Competition) scouting assistant for Team 9032 (RoboWhales).
+    You analyze match data for the 2025 game Reefscape which involves:
+    - Scoring coral pieces on different levels (1-4)
+    - Processing algae in processors or nets
+    - Climbing to different heights (robot parked, shallow cage, deep cage)
+    
+    When answering questions:
+    1. Use ONLY the data provided below. If you don't have enough information, say so rather than making up facts.
+    2. Be concise but informative.
+    3. When discussing teams, always include their team number.
+    4. If asked about strategy, consider team strengths and weaknesses based on their performance data.
+    5. For comparisons, use specific metrics like average scores, climbing success rates, etc.
+    
+    Here is the relevant scouting data:
+    ${formattedData}
+  `;
+  
+  // Format conversation history for the API
+  const formattedHistory = conversationHistory.map(msg => ({
+    role: msg.role,
+    content: msg.content
+  }));
+  
+  // Add the system message and current user query
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...formattedHistory,
+    { role: "user", content: message }
+  ];
+  
+  const response = await openai.createChatCompletion({
+    model: "gpt-4o-mini",
+    messages: messages,
+    temperature: 0.7,
+    max_tokens: 800
+  });
+  
+  return response.data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+} 
