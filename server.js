@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { initializeApp } = require('firebase/app');
 const { getFirestore } = require('firebase/firestore');
 const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
-const path = require('path');
+
+// Import the RAG system
 let retrieveRelevantData;
 import('./src/utils/ragSystem.js').then(module => {
   retrieveRelevantData = module.retrieveRelevantData;
@@ -18,11 +20,14 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Your React app's address
+  origin: '*', // Allow any origin in production
   methods: ['GET', 'POST'],
   credentials: true
 }));
 app.use(express.json());
+
+// Serve static files from the React build
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Initialize OpenAI
 const configuration = new Configuration({
@@ -30,7 +35,7 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-// API endpoint for chat
+// API endpoints
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
@@ -144,7 +149,13 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
+// The "catch-all" route handler for any requests that don't match the ones above
+// This must be AFTER all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
