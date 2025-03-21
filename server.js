@@ -7,13 +7,28 @@ const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 const fs = require('fs');
 
-// Import the RAG system
-let retrieveRelevantData;
-import('./src/utils/ragSystem.js').then(module => {
-  retrieveRelevantData = module.retrieveRelevantData;
-}).catch(err => {
-  console.error('Error importing RAG system:', err);
-});
+// Import the RAG system with better error handling
+let retrieveRelevantData = null;
+console.log("Attempting to import RAG system...");
+
+import('./src/utils/ragSystem.js')
+  .then(module => {
+    console.log("RAG system imported successfully");
+    retrieveRelevantData = module.retrieveRelevantData;
+  })
+  .catch(err => {
+    console.error('Error importing RAG system:', err);
+    // Create a fallback RAG function
+    retrieveRelevantData = async (query) => {
+      console.log("Using fallback RAG system for query:", query);
+      return {
+        teams: {},
+        matches: [],
+        queryContext: { intent: "fallback" },
+        message: "RAG system unavailable"
+      };
+    };
+  });
 
 // Initialize Express
 const app = express();
@@ -39,12 +54,35 @@ const openai = new OpenAIApi(configuration);
 // API endpoints
 app.post('/api/chat', async (req, res) => {
   try {
+    console.log("Received API request:", req.body);
     const { message, conversationHistory = [] } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    // Ensure we have a valid retrieveRelevantData function
+    if (typeof retrieveRelevantData !== 'function') {
+      console.error("RAG system not properly loaded");
+      return res.status(500).json({ 
+        error: 'RAG system not initialized',
+        details: 'Internal server configuration error'
+      });
+    }
     
     // Retrieve relevant data based on the user's query
     console.log("Retrieving data for query:", message);
-    const relevantData = await retrieveRelevantData(message);
-    console.log("Retrieved data for teams:", Object.keys(relevantData.teams));
+    let relevantData;
+    try {
+      relevantData = await retrieveRelevantData(message);
+      console.log("Data retrieved successfully");
+    } catch (ragError) {
+      console.error("Error retrieving relevant data:", ragError);
+      return res.status(500).json({ 
+        error: 'Failed to retrieve relevant data',
+        details: process.env.NODE_ENV === 'development' ? ragError.message : 'Internal server error'
+      });
+    }
     
     // Generate a response using OpenAI
     const aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
@@ -52,8 +90,8 @@ app.post('/api/chat', async (req, res) => {
     return res.status(200).json({ 
       response: aiResponse,
       context: {
-        teamsAnalyzed: Object.keys(relevantData.teams),
-        matchesAnalyzed: relevantData.matches.map(m => m.matchInfo?.matchNumber).filter(Boolean),
+        teamsAnalyzed: Object.keys(relevantData.teams || {}),
+        matchesAnalyzed: (relevantData.matches || []).map(m => m.matchInfo?.matchNumber).filter(Boolean),
         intent: relevantData.queryContext?.intent
       }
     });
@@ -61,21 +99,37 @@ app.post('/api/chat', async (req, res) => {
     console.error('Error processing chat request:', error);
     return res.status(500).json({ 
       error: 'An error occurred while processing your request',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
 
-async function generateAIResponse(message, relevantData, conversationHistory) {
-  if (!openai) {
-    return "OpenAI API is not configured. Please check your API key.";
+// Add a simple test route to verify the API is working
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    message: 'API is running',
+    env: process.env.NODE_ENV || 'development',
+    hasOpenAiKey: !!process.env.OPENAI_API_KEY
+  });
+});
+
+async function generateAIResponse(message, relevantData = {}, conversationHistory = []) {
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("OpenAI API key not configured");
+    return "I'm not fully configured yet. Please check the server configuration.";
   }
   
   try {
     console.log("Generating AI response...");
     
-    // Format the data for the AI
-    const formattedData = JSON.stringify(relevantData, null, 2);
+    // Format the data for the AI, with a fallback if data is missing
+    let formattedData = "No specific data available for this query.";
+    try {
+      formattedData = JSON.stringify(relevantData || {}, null, 2);
+    } catch (error) {
+      console.error("Error formatting data:", error);
+    }
     
     const systemPrompt = `
       You are an FRC (FIRST Robotics Competition) scouting assistant for Team 9032 (RoboWhales).
@@ -104,7 +158,7 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
     
     console.log("Calling OpenAI API...");
     
-    // Try the newer API format first
+    // Try the fetch API first
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -130,18 +184,22 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
       console.error("Error with fetch API, trying SDK:", fetchError);
       
       // Fall back to the SDK
-      const response = await openai.createChatCompletion({
-        model: "gpt-4o-mini",
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 500
-      });
-      
-      return response.data.choices[0].message.content;
+      if (openai) {
+        const response = await openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 500
+        });
+        
+        return response.data.choices[0].message.content;
+      } else {
+        throw new Error("OpenAI SDK not initialized");
+      }
     }
   } catch (error) {
     console.error("Error generating AI response:", error);
-    return `I'm having trouble generating a response right now. Please try again later.`;
+    return `I'm having trouble generating a response right now. Please try again later. (Error: ${error.message})`;
   }
 }
 
