@@ -8,7 +8,6 @@ function DataAnalysis() {
   const [filteredData, setFilteredData] = useState([]);
   const [teamFilter, setTeamFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [debug, setDebug] = useState(null); // For debugging
 
   useEffect(() => {
     // Load data from Firestore
@@ -28,16 +27,6 @@ function DataAnalysis() {
           data.push({ id: doc.id, ...docData });
         });
         console.log("Processed data:", data);
-        
-        // Set debug info for first item
-        if (data.length > 0) {
-          setDebug({
-            firstItem: data[0],
-            hasMatchInfo: !!data[0].matchInfo,
-            teamNumber: data[0].matchInfo?.teamNumber,
-            teamNumberType: typeof data[0].matchInfo?.teamNumber
-          });
-        }
         
         setScoutingData(data);
         setFilteredData(data);
