@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ScoutingForm from './components/ScoutingForm';
 import DataAnalysis from './components/DataAnalysis';
 import ChatBot from './components/ChatBot';
+import TestChat from './components/TestChat';
 import './App.css';
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
             <Route path="/" element={<ScoutingForm />} />
             <Route path="/analysis" element={<DataAnalysis />} />
             <Route path="/assistant" element={<ChatBot />} />
+            <Route path="/test-chat" element={<TestChat />} />
           </Routes>
         </main>
         
