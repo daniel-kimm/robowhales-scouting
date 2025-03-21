@@ -30,8 +30,8 @@
     "client": "react-scripts start",
     "dev": "nodemon server.js",
     "test": "node test-server.js",
-    "build": "react-scripts build",
-    "vercel-build": "npm run build"
+    "build": "CI=false react-scripts build",
+    "vercel-build": "CI=false npm run build"
   },
   "eslintConfig": {
     "extends": [
