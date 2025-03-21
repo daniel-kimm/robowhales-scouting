@@ -5,6 +5,7 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore } = require('firebase/firestore');
 const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
+const fs = require('fs');
 
 // Import the RAG system
 let retrieveRelevantData;
@@ -152,6 +153,12 @@ app.get('/api/test', (req, res) => {
 // The "catch-all" route handler for any requests that don't match the ones above
 // This must be AFTER all other routes
 app.get('*', (req, res) => {
+  console.log('Trying to serve:', path.join(__dirname, 'build', 'index.html'));
+  if (fs.existsSync(path.join(__dirname, 'build', 'index.html'))) {
+    console.log('File exists!');
+  } else {
+    console.log('File NOT found!');
+  }
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
