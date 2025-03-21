@@ -57,7 +57,11 @@ function ChatBot() {
       const conversationHistory = messages.length > 1 ? messages : [];
       
       // Use different API URL based on environment
-      const apiUrl = 'http://localhost:3002/api/chat';
+      const apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3002/api/chat'
+        : '/api/chat';
+      
+      console.log("Sending request to:", apiUrl);
       
       // Call the API
       const response = await fetch(apiUrl, {
@@ -71,12 +75,24 @@ function ChatBot() {
         }),
       });
       
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API request failed');
+        let errorMessage = 'API request failed';
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error("API error details:", errorData);
+        } catch (e) {
+          console.error("Couldn't parse error response:", e);
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      console.log("API response:", data);
       
       const aiMessage = { 
         role: 'assistant', 
@@ -86,13 +102,13 @@ function ChatBot() {
       
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error calling chat API:', error);
-      setError(error.message);
+      console.error('Error in chat:', error);
+      setError(error.message || 'An unknown error occurred');
       
-      // Show error message
+      // Add error message to chat
       const errorMessage = { 
         role: 'assistant', 
-        content: `Sorry, I encountered an error: ${error.message}. Please try again later.` 
+        content: `Sorry, I encountered an error: ${error.message}. Please try again later.`
       };
       
       setMessages(prev => [...prev, errorMessage]);
