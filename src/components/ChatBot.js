@@ -2,21 +2,43 @@ import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css';
 
 function ChatBot() {
-  const [messages, setMessages] = useState([
-    { 
-      role: 'assistant', 
-      content: 'Hi! I\'m the RoboWhales Scout Assistant. Ask me about team performance, match data, or strategy recommendations!' 
-    }
-  ]);
+  // Initialize messages from localStorage or use default
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chatHistory');
+    return savedMessages ? JSON.parse(savedMessages) : [
+      { 
+        role: 'assistant', 
+        content: 'Hi! I\'m the RoboWhales Scout Assistant. Ask me about team performance, match data, or strategy recommendations!' 
+      }
+    ];
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('chatHistory', JSON.stringify(messages));
+  }, [messages]);
+
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Format message content
+  const formatMessage = (content) => {
+    if (!content) return '';
+    
+    // Format numbered lists
+    content = content.replace(/(\d+\.\s+)([^\n]+)/g, '<div class="list-item">$1$2</div>');
+    
+    // Remove asterisks completely
+    content = content.replace(/\*/g, '');
+    
+    return content;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +56,11 @@ function ChatBot() {
       // Get conversation history (excluding the initial greeting)
       const conversationHistory = messages.length > 1 ? messages : [];
       
+      // Use different API URL based on environment
+      const apiUrl = 'http://localhost:3002/api/chat';
+      
       // Call the API
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,19 +101,39 @@ function ChatBot() {
     }
   };
 
-  // Function to handle example question clicks
-  const handleExampleClick = (question) => {
-    setInput(question);
+  // clear chat history
+  const clearChatHistory = () => {
+    const initialMessage = { 
+      role: 'assistant', 
+      content: 'Hi! I\'m the RoboWhales Scout Assistant. Ask me about team performance, match data, or strategy recommendations!' 
+    };
+    setMessages([initialMessage]);
   };
 
   return (
     <div className="container">
-      <h2>Scout Assistant</h2>
+      <div className="chatbot-header">
+        <h2 className="chatbot-title">Scout Assistant</h2>
+        <button 
+          className="clear-chat-button" 
+          onClick={clearChatHistory}
+          title="Clear chat history"
+        >
+          Clear Chat
+        </button>
+      </div>
       <div className="chatbot-container">
         <div className="messages-container">
           {messages.map((message, index) => (
             <div key={index} className={`message ${message.role}`}>
-              <div className="message-content">{message.content}</div>
+              <div 
+                className="message-content"
+                dangerouslySetInnerHTML={{ __html: 
+                  message.role === 'assistant' 
+                    ? formatMessage(message.content) 
+                    : message.content 
+                }}
+              />
               {message.context && (
                 <div className="message-context">
                   {message.context.teamsAnalyzed?.length > 0 && (
@@ -129,27 +174,6 @@ function ChatBot() {
             Send
           </button>
         </form>
-      </div>
-      
-      <div className="chatbot-help">
-        <h3>Example Questions</h3>
-        <ul>
-          <li onClick={() => handleExampleClick("How did team 9032 perform in their matches?")}>
-            How did team 9032 perform in their matches?
-          </li>
-          <li onClick={() => handleExampleClick("Which teams are best at climbing?")}>
-            Which teams are best at climbing?
-          </li>
-          <li onClick={() => handleExampleClick("What strategy should we use against team 254?")}>
-            What strategy should we use against team 254?
-          </li>
-          <li onClick={() => handleExampleClick("Compare the performance of teams 9032 and 2590")}>
-            Compare the performance of teams 9032 and 2590
-          </li>
-          <li onClick={() => handleExampleClick("What happened in match 15?")}>
-            What happened in match 15?
-          </li>
-        </ul>
       </div>
     </div>
   );

@@ -68,6 +68,19 @@ export async function retrieveRelevantData(query) {
     relevantData.generalStats = await getGeneralStats(db);
   }
   
+  // Special handling for defense queries
+  if (intent.includes('defense')) {
+    // Get general stats if not already done
+    if (!relevantData.generalStats) {
+      relevantData.generalStats = await getGeneralStats(db);
+    }
+    
+    // Add specialized defensive team rankings
+    if (relevantData.generalStats && relevantData.generalStats.teams) {
+      relevantData.topDefensiveTeams = getTopDefensiveTeams(relevantData.generalStats.teams, 10);
+    }
+  }
+  
   return relevantData;
 }
 
@@ -107,6 +120,10 @@ function determineQueryIntent(query) {
   
   if (queryLower.includes('teleop') || queryLower.includes('driver')) {
     intents.push('teleop');
+  }
+  
+  if (queryLower.includes('defen') || queryLower.includes('block') || queryLower.includes('guard')) {
+    intents.push('defense');
   }
   
   // Default to general analysis if no specific intent is detected
@@ -212,7 +229,8 @@ async function getGeneralStats(db) {
       teleop: getTopTeams(teamData, 'averageTeleopScore', 5),
       climbing: getTopTeams(teamData, 'climbSuccessRate', 5),
       coral: getTopTeams(teamData, 'totalCoral', 5),
-      algae: getTopTeams(teamData, 'totalAlgae', 5)
+      algae: getTopTeams(teamData, 'totalAlgae', 5),
+      defense: getTopDefensiveTeams(teamData, 5)
     }
   };
   
@@ -252,7 +270,10 @@ function calculateTeamStats(matches) {
       processor: 0,
       net: 0
     },
-    recentTrend: null
+    recentTrend: null,
+    defenseRatings: [],
+    averageDefenseRating: 0,
+    maxDefenseRating: 0
   };
   
   matches.forEach(match => {
@@ -302,6 +323,14 @@ function calculateTeamStats(matches) {
     stats.totalAlgae += 
       (match.autonomous?.algaeProcessor || 0) + (match.teleop?.algaeProcessor || 0) +
       (match.autonomous?.algaeNet || 0) + (match.teleop?.algaeNet || 0);
+    
+    // Track defense ratings more carefully
+    if (match.defense && typeof match.defense.rating === 'number') {
+      stats.defenseRatings.push(match.defense.rating);
+      if (!stats.maxDefenseRating || match.defense.rating > stats.maxDefenseRating) {
+        stats.maxDefenseRating = match.defense.rating;
+      }
+    }
   });
   
   // Calculate averages
@@ -323,6 +352,12 @@ function calculateTeamStats(matches) {
       direction: recentAvg > previousAvg ? 'improving' : recentAvg < previousAvg ? 'declining' : 'stable',
       percentage: previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 0
     };
+  }
+  
+  // Calculate average defense rating
+  if (stats.defenseRatings.length > 0) {
+    stats.averageDefenseRating = stats.defenseRatings.reduce((sum, rating) => sum + rating, 0) / 
+                                 stats.defenseRatings.length;
   }
   
   return stats;
@@ -347,4 +382,53 @@ function getTopTeams(teamData, statKey, count) {
       value: data.stats[statKey],
       matches: data.matches.length
     }));
-} 
+}
+
+function getTopTeamsNormalized(teamData, statKey, count, minimum = 3) {
+  return Object.entries(teamData)
+    .filter(([_, data]) => data.stats && 
+                           data.stats[statKey] !== undefined && 
+                           data.matches.length >= minimum)
+    .sort((a, b) => b[1].stats[statKey] - a[1].stats[statKey])
+    .slice(0, count)
+    .map(([teamNumber, data]) => ({
+      teamNumber,
+      value: data.stats[statKey],
+      matches: data.matches.length
+    }));
+}
+
+// Add a specialized function for defense rankings
+function getTopDefensiveTeams(teamData, count = 5) {
+  return Object.entries(teamData)
+    .filter(([_, data]) => data.stats && data.stats.defenseRatings && data.stats.defenseRatings.length > 0)
+    .sort((a, b) => {
+      // First sort by average defense rating
+      const avgDiff = b[1].stats.averageDefenseRating - a[1].stats.averageDefenseRating;
+      if (Math.abs(avgDiff) > 0.001) return avgDiff;
+      
+      // If averages are identical, sort by max rating
+      return b[1].stats.maxDefenseRating - a[1].stats.maxDefenseRating;
+    })
+    .slice(0, count)
+    .map(([teamNumber, data]) => ({
+      teamNumber,
+      averageDefenseRating: data.stats.averageDefenseRating,
+      maxDefenseRating: data.stats.maxDefenseRating,
+      matches: data.matches.length,
+      ratingsCount: data.stats.defenseRatings.length
+    }));
+}
+
+const systemPrompt = `
+  You are an FRC scouting assistant for Team 9032.
+  
+  When analyzing team performance:
+  1. ALWAYS prioritize average scores over total scores
+  2. Consider the number of matches played when comparing teams
+  3. Include defensive capabilities in your analysis
+  4. For rankings, teams with fewer than 3 matches should be noted as having limited data
+  
+  Here is the relevant scouting data:
+  ${formattedData}
+`; 
