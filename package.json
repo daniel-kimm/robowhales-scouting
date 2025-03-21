@@ -29,7 +29,9 @@
     "server": "node simple-server.js",
     "client": "react-scripts start",
     "dev": "nodemon server.js",
-    "test": "node test-server.js"
+    "test": "node test-server.js",
+    "build": "react-scripts build",
+    "vercel-build": "npm run build"
   },
   "eslintConfig": {
     "extends": [
