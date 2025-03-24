@@ -1,4 +1,36 @@
+import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, where, limit } from 'firebase/firestore';
+
+// Initialize Firebase with error handling
+let db;
+try {
+  // Try to import the app from the config file
+  import('../../src/firebase.config.js')
+    .then(module => {
+      db = getFirestore(module.app);
+      console.log("Firebase initialized successfully from config file");
+    })
+    .catch(error => {
+      console.error("Error importing Firebase config:", error);
+      
+      // Fallback to inline initialization
+      const firebaseConfig = {
+        apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+        authDomain: "robowhales-scouting.firebaseapp.com",
+        projectId: "robowhales-scouting",
+        storageBucket: "robowhales-scouting.firebasestorage.app",
+        messagingSenderId: "94724192757",
+        appId: "1:94724192757:web:270a356595fdddc54b08bc",
+        measurementId: "G-RW32SXHSRX"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      console.log("Firebase initialized with fallback configuration");
+    });
+} catch (fbError) {
+  console.error("Critical Firebase initialization error:", fbError);
+}
 
 // Function to extract team numbers from a user query
 export function extractTeamNumbers(text) {
@@ -22,7 +54,12 @@ export function extractMatchNumbers(text) {
 
 // Main function to retrieve relevant data based on user query
 export async function retrieveRelevantData(query) {
-  const db = getFirestore();
+  // Ensure db is initialized
+  if (!db) {
+    console.log("Firebase not yet initialized, initializing now...");
+    db = getFirestore();
+  }
+  
   const scoutingCollection = collection(db, "scoutingData");
   
   // Extract entities from query
