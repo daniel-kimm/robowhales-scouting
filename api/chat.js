@@ -1,27 +1,39 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { retrieveRelevantData } from '../src/utils/ragSystem';
 import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
-// Initialize Firebase (you'll need to replace with your config)
+// Initialize Firebase 
 const firebaseConfig = {
-    apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
-    authDomain: "robowhales-scouting.firebaseapp.com",
-    projectId: "robowhales-scouting",
-    storageBucket: "robowhales-scouting.firebasestorage.app",
-    messagingSenderId: "94724192757",
-    appId: "1:94724192757:web:270a356595fdddc54b08bc",
-    measurementId: "G-RW32SXHSRX"
-  };
+  apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+  authDomain: "robowhales-scouting.firebaseapp.com",
+  projectId: "robowhales-scouting",
+  storageBucket: "robowhales-scouting.firebasestorage.app",
+  messagingSenderId: "94724192757",
+  appId: "1:94724192757:web:270a356595fdddc54b08bc",
+  measurementId: "G-RW32SXHSRX"
+};
 
-// Initialize Firebase with error handling
+// Initialize Firebase and export the db instance
+let firebaseApp;
+let db;
+
 try {
-  initializeApp(firebaseConfig);
+  firebaseApp = initializeApp(firebaseConfig);
+  db = getFirestore(firebaseApp);
+  console.log("Firebase initialized successfully in API handler");
 } catch (error) {
-  // If Firebase is already initialized, this will prevent the app from crashing
   if (!/already exists/.test(error.message)) {
-    console.error('Firebase initialization error', error.stack);
+    console.error('Firebase initialization error in API handler:', error.stack);
+  } else {
+    console.log("Firebase already initialized in API handler");
+    // Get the existing app's Firestore instance
+    db = getFirestore();
   }
 }
+
+// Make db available to imported modules
+global.firestoreDb = db;
 
 // Initialize OpenAI
 const configuration = new Configuration({
@@ -37,9 +49,12 @@ export default async function handler(req, res) {
   try {
     const { message, conversationHistory = [] } = req.body;
     
+    // Log the database instance
+    console.log("Firestore DB instance:", db ? "Available" : "Not available");
+    
     // Retrieve relevant data based on the user's query
     console.log("Retrieving data for query:", message);
-    const relevantData = await retrieveRelevantData(message);
+    const relevantData = await retrieveRelevantData(message, db);
     console.log("Retrieved data for teams:", Object.keys(relevantData.teams));
     
     // Generate a response using OpenAI
