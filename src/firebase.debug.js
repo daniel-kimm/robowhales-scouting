@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, limit } from 'firebase/firestore';
+const { initializeApp } = require('firebase/app');
+const { getFirestore, collection, getDocs, limit } = require('firebase/firestore');
 
 // Firebase configuration
 const firebaseConfig = {
@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export async function testFirebaseConnection() {
+async function testFirebaseConnection() {
   console.log("------- FIREBASE DEBUG DIAGNOSTICS -------");
   let firebaseApp;
   let db;
@@ -80,7 +80,7 @@ export async function testFirebaseConnection() {
 }
 
 // Add a function to export all data for debug purposes
-export async function exportAllData() {
+async function exportAllData() {
   try {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -97,4 +97,9 @@ export async function exportAllData() {
     console.error("Failed to export data:", error);
     return { error: error.message };
   }
-} 
+}
+
+module.exports = {
+  testFirebaseConnection,
+  exportAllData
+}; 
