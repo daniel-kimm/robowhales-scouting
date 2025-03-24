@@ -1,36 +1,52 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, where, limit } from 'firebase/firestore';
 
-// Initialize Firebase with error handling
+// Create a promise to track Firebase initialization
+let firebaseInitPromise;
 let db;
-try {
-  // Try to import the app from the config file
-  import('../../src/firebase.config.js')
-    .then(module => {
-      db = getFirestore(module.app);
-      console.log("Firebase initialized successfully from config file");
-    })
-    .catch(error => {
-      console.error("Error importing Firebase config:", error);
-      
-      // Fallback to inline initialization
-      const firebaseConfig = {
-        apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
-        authDomain: "robowhales-scouting.firebaseapp.com",
-        projectId: "robowhales-scouting",
-        storageBucket: "robowhales-scouting.firebasestorage.app",
-        messagingSenderId: "94724192757",
-        appId: "1:94724192757:web:270a356595fdddc54b08bc",
-        measurementId: "G-RW32SXHSRX"
-      };
-      
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      console.log("Firebase initialized with fallback configuration");
-    });
-} catch (fbError) {
-  console.error("Critical Firebase initialization error:", fbError);
+
+// Initialize Firebase with proper promise handling
+function initializeFirebase() {
+  if (firebaseInitPromise) return firebaseInitPromise;
+  
+  firebaseInitPromise = new Promise(async (resolve, reject) => {
+    try {
+      // Try to import the app from the config file
+      try {
+        const module = await import('../../src/firebase.config.js');
+        db = getFirestore(module.app);
+        console.log("Firebase initialized successfully from config file");
+        resolve(db);
+      } catch (error) {
+        console.error("Error importing Firebase config:", error);
+        
+        // Fallback to inline initialization
+        const firebaseConfig = {
+          apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+          authDomain: "robowhales-scouting.firebaseapp.com",
+          projectId: "robowhales-scouting",
+          storageBucket: "robowhales-scouting.firebasestorage.app",
+          messagingSenderId: "94724192757",
+          appId: "1:94724192757:web:270a356595fdddc54b08bc",
+          measurementId: "G-RW32SXHSRX"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("Firebase initialized with fallback configuration");
+        resolve(db);
+      }
+    } catch (fbError) {
+      console.error("Critical Firebase initialization error:", fbError);
+      reject(fbError);
+    }
+  });
+  
+  return firebaseInitPromise;
 }
+
+// Call initialization immediately
+initializeFirebase().catch(err => console.error("Failed to initialize Firebase:", err));
 
 // Function to extract team numbers from a user query
 export function extractTeamNumbers(text) {
@@ -54,10 +70,19 @@ export function extractMatchNumbers(text) {
 
 // Main function to retrieve relevant data based on user query
 export async function retrieveRelevantData(query) {
-  // Ensure db is initialized
-  if (!db) {
-    console.log("Firebase not yet initialized, initializing now...");
-    db = getFirestore();
+  // WAIT for Firebase to initialize before proceeding
+  try {
+    console.log("Waiting for Firebase to initialize...");
+    db = await initializeFirebase();
+    console.log("Firebase ready for query");
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    return {
+      teams: {},
+      matches: [],
+      queryContext: { intent: "firebase_error" },
+      message: "Firebase initialization failed"
+    };
   }
   
   const scoutingCollection = collection(db, "scoutingData");
