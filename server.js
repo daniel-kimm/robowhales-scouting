@@ -6,6 +6,7 @@ const { getFirestore } = require('firebase/firestore');
 const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 const fs = require('fs');
+const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
 
 // Firebase configuration
 const firebaseConfig = {
@@ -144,6 +145,30 @@ app.get('/api/health', (req, res) => {
     hasOpenAiKey: !!process.env.OPENAI_API_KEY,
     hasFirestore: !!db
   });
+});
+
+// Add a diagnostic endpoint
+app.get('/api/firebase-debug', async (req, res) => {
+  try {
+    console.log("Running Firebase diagnostics...");
+    const results = await testFirebaseConnection();
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error running diagnostics:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add a data export endpoint
+app.get('/api/export-data', async (req, res) => {
+  try {
+    console.log("Exporting all data...");
+    const data = await exportAllData();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error exporting data:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 async function generateAIResponse(message, relevantData = {}, conversationHistory = []) {
