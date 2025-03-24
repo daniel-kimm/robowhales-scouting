@@ -7,6 +7,37 @@ const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 const fs = require('fs');
 
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+  authDomain: "robowhales-scouting.firebaseapp.com",
+  projectId: "robowhales-scouting",
+  storageBucket: "robowhales-scouting.firebasestorage.app",
+  messagingSenderId: "94724192757",
+  appId: "1:94724192757:web:270a356595fdddc54b08bc",
+  measurementId: "G-RW32SXHSRX"
+};
+
+// Initialize Firebase first - before any imports that might need it
+let firebaseApp;
+let db;
+try {
+  console.log("Initializing Firebase in server.js...");
+  firebaseApp = initializeApp(firebaseConfig);
+  db = getFirestore(firebaseApp);
+  // Make the db instance globally available
+  global.firestoreDb = db;
+  console.log("Firebase initialized successfully in server.js");
+} catch (error) {
+  if (!/already exists/.test(error.message)) {
+    console.error('Firebase initialization error in server.js:', error.stack);
+  } else {
+    console.log("Firebase already initialized in server.js");
+    db = getFirestore();
+    global.firestoreDb = db;
+  }
+}
+
 // Import the RAG system with better error handling
 let retrieveRelevantData = null;
 console.log("Attempting to import RAG system...");
@@ -70,11 +101,11 @@ app.post('/api/chat', async (req, res) => {
       });
     }
     
-    // Retrieve relevant data based on the user's query
+    // Retrieve relevant data based on the user's query, passing the Firestore instance
     console.log("Retrieving data for query:", message);
     let relevantData;
     try {
-      relevantData = await retrieveRelevantData(message);
+      relevantData = await retrieveRelevantData(message, db);
       console.log("Data retrieved successfully");
     } catch (ragError) {
       console.error("Error retrieving relevant data:", ragError);
@@ -110,7 +141,8 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     message: 'API is running',
     env: process.env.NODE_ENV || 'development',
-    hasOpenAiKey: !!process.env.OPENAI_API_KEY
+    hasOpenAiKey: !!process.env.OPENAI_API_KEY,
+    hasFirestore: !!db
   });
 });
 
