@@ -1,9 +1,7 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+const { initializeApp } = require('firebase/app');
+const { getFirestore } = require('firebase/firestore');
 
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
   authDomain: "robowhales-scouting.firebaseapp.com",
@@ -15,7 +13,24 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+console.log("Initializing Firebase in firebase.config.js...");
+let firebaseApp;
+let db;
 
-// Export the initialized app
-export { app };
+try {
+  firebaseApp = initializeApp(firebaseConfig);
+  db = getFirestore(firebaseApp);
+  console.log("Firebase initialized successfully in firebase.config.js");
+} catch (error) {
+  if (!/already exists/.test(error.message)) {
+    console.error('Firebase initialization error in firebase.config.js:', error.stack);
+  } else {
+    console.log("Firebase already initialized in firebase.config.js");
+    db = getFirestore();
+  }
+}
+
+module.exports = {
+  db,
+  firebaseApp
+};

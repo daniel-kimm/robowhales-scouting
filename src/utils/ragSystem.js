@@ -1,13 +1,14 @@
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+const { collection, getDocs, query, where, limit } = require('firebase/firestore');
+const { db } = require('../firebase.config.js');
 
 // Function to extract team numbers from a user query
-export function extractTeamNumbers(text) {
+function extractTeamNumbers(text) {
   const teamNumberRegex = /\b\d{1,4}\b/g;
   return [...new Set(text.match(teamNumberRegex) || [])];
 }
 
 // Function to extract match numbers from a user query
-export function extractMatchNumbers(text) {
+function extractMatchNumbers(text) {
   // Look for patterns like "match 5", "qualification 10", etc.
   const matchRegex = /\b(?:match|qualification|qual|elim|elimination|finals?)\s*#?\s*(\d+)\b/gi;
   const matches = [];
@@ -52,16 +53,17 @@ function determineQueryIntent(query) {
 }
 
 // Main function to retrieve relevant data based on user query
-export async function retrieveRelevantData(query, externalDb = null) {
+async function retrieveRelevantData(query, externalDb = null) {
   console.log("=== RAG SYSTEM DETAILED DIAGNOSTICS ===");
   console.log("Query:", query);
   console.log("External DB provided:", !!externalDb);
-  console.log("Global DB available:", !!global.firestoreDb);
+  console.log("Imported DB available:", !!db);
   
-  let db = externalDb || global.firestoreDb;
+  // Use provided DB, imported DB, or fail
+  const firestoreDb = externalDb || db;
   
   // If we still don't have a DB, log the error and return fallback
-  if (!db) {
+  if (!firestoreDb) {
     console.error("CRITICAL: No Firestore database available");
     return {
       teams: {},
@@ -72,7 +74,7 @@ export async function retrieveRelevantData(query, externalDb = null) {
   }
   
   try {
-    console.log("Using existing Firestore DB instance");
+    console.log("Using Firestore DB instance");
     
     // Extract entities from query
     const teamNumbers = extractTeamNumbers(query);
@@ -85,12 +87,17 @@ export async function retrieveRelevantData(query, externalDb = null) {
     console.log("Determined intent:", intent);
     
     // Set up empty result containers
-    const teamStats = {};
+    let teamStats = {};
     const matchData = [];
     
     console.log("Attempting to access scoutingData collection...");
-    const scoutingCollection = collection(db, "scoutingData");
+    const scoutingCollection = collection(firestoreDb, "scoutingData");
     console.log("Collection reference created successfully");
+    
+    // Simple test query first
+    console.log("Testing collection with initial query...");
+    const testSnapshot = await getDocs(query(scoutingCollection, limit(1)));
+    console.log(`Test query returned ${testSnapshot.size} documents`);
     
     console.log("Querying Firestore for all scouting data...");
     const querySnapshot = await getDocs(scoutingCollection);
@@ -106,10 +113,14 @@ export async function retrieveRelevantData(query, externalDb = null) {
     }
     
     console.log(`Retrieved ${querySnapshot.size} documents`);
+    let processedDocs = 0;
     
     // Process all documents
     querySnapshot.forEach(doc => {
+      processedDocs++;
       const match = { id: doc.id, ...doc.data() };
+      
+      console.log(`Processing document ${processedDocs}: Match ${match.matchInfo?.matchNumber}, Team ${match.matchInfo?.teamNumber}`);
       
       // If specific match numbers were requested, filter for those
       if (matchNumbers.length > 0 && !matchNumbers.includes(match.matchInfo?.matchNumber)) {
@@ -200,6 +211,7 @@ export async function retrieveRelevantData(query, externalDb = null) {
     
   } catch (error) {
     console.error("Error in retrieveRelevantData:", error);
+    console.error("Error stack:", error.stack);
     return {
       teams: {},
       matches: [],
@@ -233,4 +245,10 @@ const systemPrompt = `
   
   Here is the relevant scouting data:
   ${formattedData}
-`; 
+`;
+
+module.exports = {
+  retrieveRelevantData,
+  extractTeamNumbers,
+  extractMatchNumbers
+}; 
