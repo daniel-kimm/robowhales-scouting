@@ -68,7 +68,7 @@ async function retrieveRelevantData(query, externalDb = null) {
     return {
       teams: {},
       matches: [],
-      queryContext: { intent: "db_unavailable" },
+      queryContext: { intent: "fallback" },
       message: "Firestore database instance is unavailable"
     };
   }
@@ -215,7 +215,7 @@ async function retrieveRelevantData(query, externalDb = null) {
     return {
       teams: {},
       matches: [],
-      queryContext: { intent: "error", error: error.message },
+      queryContext: { intent: "fallback" },
       message: "Error retrieving data: " + error.message
     };
   }
@@ -233,19 +233,6 @@ function getTopDefensiveTeams(teams, limit = 5) {
       matchCount: stats.matches.length
     }));
 }
-
-const systemPrompt = `
-  You are an FRC scouting assistant for Team 9032.
-  
-  When analyzing team performance:
-  1. ALWAYS prioritize average scores over total scores
-  2. Consider the number of matches played when comparing teams
-  3. Include defensive capabilities in your analysis
-  4. For rankings, teams with fewer than 3 matches should be noted as having limited data
-  
-  Here is the relevant scouting data:
-  ${formattedData}
-`;
 
 module.exports = {
   retrieveRelevantData,
