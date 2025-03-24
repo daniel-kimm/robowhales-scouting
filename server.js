@@ -1,66 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initializeApp } = require('firebase/app');
-const { getFirestore } = require('firebase/firestore');
 const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 const fs = require('fs');
+const { db } = require('./src/firebase.config');
 const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
-  authDomain: "robowhales-scouting.firebaseapp.com",
-  projectId: "robowhales-scouting",
-  storageBucket: "robowhales-scouting.firebasestorage.app",
-  messagingSenderId: "94724192757",
-  appId: "1:94724192757:web:270a356595fdddc54b08bc",
-  measurementId: "G-RW32SXHSRX"
-};
-
-// Initialize Firebase first - before any imports that might need it
-let firebaseApp;
-let db;
-try {
-  console.log("Initializing Firebase in server.js...");
-  firebaseApp = initializeApp(firebaseConfig);
-  db = getFirestore(firebaseApp);
-  // Make the db instance globally available
-  global.firestoreDb = db;
-  console.log("Firebase initialized successfully in server.js");
-} catch (error) {
-  if (!/already exists/.test(error.message)) {
-    console.error('Firebase initialization error in server.js:', error.stack);
-  } else {
-    console.log("Firebase already initialized in server.js");
-    db = getFirestore();
-    global.firestoreDb = db;
-  }
-}
-
-// Import the RAG system with better error handling
-let retrieveRelevantData = null;
-console.log("Attempting to import RAG system...");
-
-import('./src/utils/ragSystem.js')
-  .then(module => {
-    console.log("RAG system imported successfully");
-    retrieveRelevantData = module.retrieveRelevantData;
-  })
-  .catch(err => {
-    console.error('Error importing RAG system:', err);
-    // Create a fallback RAG function
-    retrieveRelevantData = async (query) => {
-      console.log("Using fallback RAG system for query:", query);
-      return {
-        teams: {},
-        matches: [],
-        queryContext: { intent: "fallback" },
-        message: "RAG system unavailable"
-      };
-    };
-  });
+const { retrieveRelevantData } = require('./src/utils/ragSystem');
 
 // Initialize Express
 const app = express();
@@ -93,14 +39,8 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    // Ensure we have a valid retrieveRelevantData function
-    if (typeof retrieveRelevantData !== 'function') {
-      console.error("RAG system not properly loaded");
-      return res.status(500).json({ 
-        error: 'RAG system not initialized',
-        details: 'Internal server configuration error'
-      });
-    }
+    // Check Firebase connection
+    console.log("Checking Firebase connection: DB instance available:", !!db);
     
     // Retrieve relevant data based on the user's query, passing the Firestore instance
     console.log("Retrieving data for query:", message);
@@ -171,6 +111,24 @@ app.get('/api/export-data', async (req, res) => {
   }
 });
 
+// Add a collection check endpoint
+app.get('/api/check-collections', async (req, res) => {
+  try {
+    const { collection, getDocs } = require('firebase/firestore');
+    console.log("Checking collections...");
+    const scoutingCollection = collection(db, "scoutingData");
+    const snapshot = await getDocs(scoutingCollection);
+    res.status(200).json({ 
+      collection: "scoutingData", 
+      documentCount: snapshot.size,
+      sample: snapshot.size > 0 ? snapshot.docs[0].data() : null
+    });
+  } catch (error) {
+    console.error("Error checking collections:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
   console.log("Generating AI response with data:", {
     teamsCount: Object.keys(relevantData.teams || {}).length,
@@ -207,7 +165,7 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     formattedData += "MATCH DATA:\n";
     
     relevantData.matches.forEach(match => {
-      formattedData += `Match ${match.matchInfo.matchNumber} - Team ${match.matchInfo.teamNumber} (${match.matchInfo.alliance}):\n`;
+      formattedData += `Match ${match.matchInfo?.matchNumber || 'unknown'} - Team ${match.matchInfo?.teamNumber || 'unknown'} (${match.matchInfo?.alliance || 'unknown'}):\n`;
       formattedData += `- Total score: ${match.scores?.totalPoints || 0} points\n`;
       formattedData += `- Auto: ${match.scores?.autoPoints || 0} points\n`;
       formattedData += `- Teleop: ${match.scores?.teleopPoints || 0} points\n`;
@@ -273,20 +231,8 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
   }
 }
 
-// Add this to server.js
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working!' });
-});
-
-// The "catch-all" route handler for any requests that don't match the ones above
-// This must be AFTER all other routes
+// Catch-all handler to serve React app
 app.get('*', (req, res) => {
-  console.log('Trying to serve:', path.join(__dirname, 'build', 'index.html'));
-  if (fs.existsSync(path.join(__dirname, 'build', 'index.html'))) {
-    console.log('File exists!');
-  } else {
-    console.log('File NOT found!');
-  }
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
