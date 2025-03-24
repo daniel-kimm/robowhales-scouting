@@ -171,92 +171,105 @@ app.get('/api/export-data', async (req, res) => {
   }
 });
 
-async function generateAIResponse(message, relevantData = {}, conversationHistory = []) {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("OpenAI API key not configured");
-    return "I'm not fully configured yet. Please check the server configuration.";
+async function generateAIResponse(message, relevantData, conversationHistory = []) {
+  console.log("Generating AI response with data:", {
+    teamsCount: Object.keys(relevantData.teams || {}).length,
+    matchesCount: (relevantData.matches || []).length,
+    intent: relevantData.queryContext?.intent
+  });
+  
+  // Format the relevant data for prompting
+  let formattedData = "";
+  
+  // Format teams data
+  if (Object.keys(relevantData.teams || {}).length > 0) {
+    formattedData += "TEAM PERFORMANCE DATA:\n";
+    
+    Object.values(relevantData.teams).forEach(team => {
+      formattedData += `Team ${team.teamNumber}:\n`;
+      formattedData += `- Matches played: ${team.matches.length}\n`;
+      formattedData += `- Average total score: ${team.averageScore.toFixed(1)} points\n`;
+      formattedData += `- Average auto score: ${team.autoPerformance.toFixed(1)} points\n`;
+      formattedData += `- Average teleop score: ${team.teleopPerformance.toFixed(1)} points\n`;
+      formattedData += `- Average endgame score: ${team.endgamePerformance.toFixed(1)} points\n`;
+      formattedData += `- Climb success rate: ${(team.climbSuccess * 100).toFixed(1)}%\n`;
+      
+      if (team.defensiveRating > 0) {
+        formattedData += `- Defensive rating: ${team.defensiveRating.toFixed(1)}/10\n`;
+      }
+      
+      formattedData += "\n";
+    });
   }
   
+  // Format match data if needed
+  if ((relevantData.matches || []).length > 0 && relevantData.queryContext?.intent === "match_analysis") {
+    formattedData += "MATCH DATA:\n";
+    
+    relevantData.matches.forEach(match => {
+      formattedData += `Match ${match.matchInfo.matchNumber} - Team ${match.matchInfo.teamNumber} (${match.matchInfo.alliance}):\n`;
+      formattedData += `- Total score: ${match.scores?.totalPoints || 0} points\n`;
+      formattedData += `- Auto: ${match.scores?.autoPoints || 0} points\n`;
+      formattedData += `- Teleop: ${match.scores?.teleopPoints || 0} points\n`;
+      formattedData += `- Endgame: ${match.scores?.bargePoints || 0} points\n`;
+      
+      if (match.additional?.notes) {
+        formattedData += `- Notes: ${match.additional.notes}\n`;
+      }
+      
+      formattedData += "\n";
+    });
+  }
+  
+  // If no data is available
+  if (formattedData === "") {
+    formattedData = "No specific scouting data is available for this query.";
+  }
+  
+  // Create system prompt
+  const systemPrompt = `
+    You are an FRC scouting assistant for Team 9032.
+    
+    When analyzing team performance:
+    1. ALWAYS prioritize average scores over total scores
+    2. Consider the number of matches played when comparing teams
+    3. Include defensive capabilities in your analysis
+    4. For rankings, teams with fewer than 3 matches should be noted as having limited data
+    
+    Here is the relevant scouting data:
+    ${formattedData}
+  `;
+  
+  // Format conversation history
+  const formattedHistory = conversationHistory.map(msg => ({
+    role: msg.role,
+    content: msg.content
+  }));
+  
+  // Create messages array
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...formattedHistory,
+    { role: "user", content: message }
+  ];
+  
   try {
-    console.log("Generating AI response...");
-    
-    // Format the data for the AI, with a fallback if data is missing
-    let formattedData = "No specific data available for this query.";
-    try {
-      formattedData = JSON.stringify(relevantData || {}, null, 2);
-    } catch (error) {
-      console.error("Error formatting data:", error);
+    if (!openai) {
+      console.log("OpenAI API not initialized, returning mock response");
+      return `This is a test response with the following data: Teams: ${Object.keys(relevantData.teams || {}).join(', ')}. Your message: ${message}`;
     }
     
-    const systemPrompt = `
-      You are an FRC (FIRST Robotics Competition) scouting assistant for Team 9032 (RoboWhales).
-      You analyze match data for the 2025 game Reefscape.
-      
-      When answering questions:
-      1. Use ONLY the data provided below. If you don't have enough information, say so.
-      2. Be concise but informative.
-      
-      Here is the relevant scouting data:
-      ${formattedData}
-    `;
+    const response = await openai.createChatCompletion({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 800
+    });
     
-    // Format conversation history for the API
-    const formattedHistory = conversationHistory ? conversationHistory.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    })) : [];
-    
-    // Add the system message and current user query
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...formattedHistory,
-      { role: "user", content: message }
-    ];
-    
-    console.log("Calling OpenAI API...");
-    
-    // Try the fetch API first
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 500
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (fetchError) {
-      console.error("Error with fetch API, trying SDK:", fetchError);
-      
-      // Fall back to the SDK
-      if (openai) {
-        const response = await openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 500
-        });
-        
-        return response.data.choices[0].message.content;
-      } else {
-        throw new Error("OpenAI SDK not initialized");
-      }
-    }
+    return response.data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
   } catch (error) {
     console.error("Error generating AI response:", error);
-    return `I'm having trouble generating a response right now. Please try again later. (Error: ${error.message})`;
+    return "Sorry, there was an error generating a response. Please try again.";
   }
 }
 

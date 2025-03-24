@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 
 // Function to extract team numbers from a user query
 export function extractTeamNumbers(text) {
@@ -20,215 +20,113 @@ export function extractMatchNumbers(text) {
   return [...new Set(matches)];
 }
 
+// Determine the intent of the query
+function determineQueryIntent(query) {
+  const queryLower = query.toLowerCase();
+  
+  if (/\b(?:compare|versus|vs\.?|against|better)\b/i.test(queryLower)) {
+    return "team_comparison";
+  }
+  
+  if (/\b(?:best|top|strongest|highest|most effective)\b/i.test(queryLower)) {
+    return "top_teams";
+  }
+  
+  if (/\b(?:match|qualification|quals?|elims?|playoffs?)\s+(?:\d+|results|outcome|scores?)\b/i.test(queryLower)) {
+    return "match_analysis";
+  }
+  
+  if (/\b(?:defense|defensive|block|blocking|counter)\b/i.test(queryLower)) {
+    return "defensive_analysis";
+  }
+  
+  if (/\b(?:alliance|selection|pick|draft|partner)\b/i.test(queryLower)) {
+    return "alliance_selection";
+  }
+  
+  if (/\b(?:strategy|plan|approach|tactic)\b/i.test(queryLower)) {
+    return "strategy_recommendation";
+  }
+  
+  return "general_question";
+}
+
 // Main function to retrieve relevant data based on user query
 export async function retrieveRelevantData(query, externalDb = null) {
-  let db;
+  console.log("=== RAG SYSTEM DETAILED DIAGNOSTICS ===");
+  console.log("Query:", query);
+  console.log("External DB provided:", !!externalDb);
+  console.log("Global DB available:", !!global.firestoreDb);
   
-  // Use the provided db instance, the global instance, or try to get a new one
-  if (externalDb) {
-    console.log("Using externally provided Firestore DB instance");
-    db = externalDb;
-  } else if (global.firestoreDb) {
-    console.log("Using global Firestore DB instance");
-    db = global.firestoreDb;
-  } else {
-    try {
-      console.log("No Firestore DB provided, creating new instance");
-      db = getFirestore();
-    } catch (error) {
-      console.error("Failed to get Firestore instance:", error);
-      return {
-        teams: {},
-        matches: [],
-        queryContext: { intent: "firebase_error" },
-        message: "Firebase initialization failed"
-      };
-    }
+  let db = externalDb || global.firestoreDb;
+  
+  // If we still don't have a DB, log the error and return fallback
+  if (!db) {
+    console.error("CRITICAL: No Firestore database available");
+    return {
+      teams: {},
+      matches: [],
+      queryContext: { intent: "db_unavailable" },
+      message: "Firestore database instance is unavailable"
+    };
   }
-
+  
   try {
-    // Check if db is available
-    if (!db) {
-      throw new Error("Firestore database instance is not available");
-    }
-    
-    const scoutingCollection = collection(db, "scoutingData");
-    console.log("Successfully accessed Firestore collection");
+    console.log("Using existing Firestore DB instance");
     
     // Extract entities from query
     const teamNumbers = extractTeamNumbers(query);
     const matchNumbers = extractMatchNumbers(query);
+    console.log("Extracted team numbers:", teamNumbers);
+    console.log("Extracted match numbers:", matchNumbers);
     
     // Determine query intent
     const intent = determineQueryIntent(query);
+    console.log("Determined intent:", intent);
     
-    let relevantData = {
-      teams: {},
-      matches: [],
-      generalStats: null,
-      queryContext: {
-        teamNumbers,
-        matchNumbers,
-        intent
-      }
-    };
-    
-    // If specific teams are mentioned, get their data
-    if (teamNumbers.length > 0) {
-      for (const teamNumber of teamNumbers) {
-        const teamData = await getTeamData(db, teamNumber);
-        if (teamData.matches.length > 0) {
-          relevantData.teams[teamNumber] = teamData;
-        }
-      }
-    }
-    
-    // If specific matches are mentioned, get match data
-    if (matchNumbers.length > 0) {
-      for (const matchNumber of matchNumbers) {
-        const matchData = await getMatchData(db, matchNumber);
-        relevantData.matches.push(...matchData);
-      }
-    }
-    
-    // If no specific entities or we need general stats
-    if ((teamNumbers.length === 0 && matchNumbers.length === 0) || 
-        intent.includes('comparison') || 
-        intent.includes('ranking')) {
-      relevantData.generalStats = await getGeneralStats(db);
-    }
-    
-    return relevantData;
-  } catch (error) {
-    console.error("Error retrieving data from Firestore:", error);
-    return {
-      teams: {},
-      matches: [],
-      queryContext: { intent: "fallback" },
-      message: "Failed to retrieve data from Firestore: " + error.message
-    };
-  }
-}
-
-// Determine the intent of the query
-function determineQueryIntent(query) {
-  const intents = [];
-  const queryLower = query.toLowerCase();
-  
-  // Check for different intents
-  if (queryLower.includes('compar') || queryLower.includes('vs') || queryLower.includes('versus')) {
-    intents.push('comparison');
-  }
-  
-  if (queryLower.includes('best') || queryLower.includes('top') || queryLower.includes('rank')) {
-    intents.push('ranking');
-  }
-  
-  if (queryLower.includes('match') || queryLower.includes('game') || queryLower.includes('played')) {
-    intents.push('match_analysis');
-  }
-  
-  if (queryLower.includes('strategy') || queryLower.includes('alliance') || queryLower.includes('partner')) {
-    intents.push('strategy');
-  }
-  
-  if (queryLower.includes('climb') || queryLower.includes('cage') || queryLower.includes('endgame')) {
-    intents.push('climbing');
-  }
-  
-  if (queryLower.includes('coral') || queryLower.includes('scoring') || queryLower.includes('points')) {
-    intents.push('scoring');
-  }
-  
-  if (queryLower.includes('auto') || queryLower.includes('autonomous')) {
-    intents.push('autonomous');
-  }
-  
-  if (queryLower.includes('teleop') || queryLower.includes('driver')) {
-    intents.push('teleop');
-  }
-  
-  if (queryLower.includes('defen') || queryLower.includes('block') || queryLower.includes('guard')) {
-    intents.push('defense');
-  }
-  
-  // Return fallback if no intents are determined
-  return intents.length > 0 ? intents : ['general'];
-}
-
-// Function to get data for a specific team
-async function getTeamData(db, teamNumber) {
-  try {
-    console.log(`Fetching data for team ${teamNumber}`);
-    const q = query(
-      collection(db, "scoutingData"),
-      where("matchInfo.teamNumber", "==", teamNumber.toString())
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const matches = [];
-    let teamStats = {
-      auto: { averagePoints: 0 },
-      teleop: { averagePoints: 0 },
-      endgame: { averagePoints: 0 },
-      overall: { averagePoints: 0, matches: 0 }
-    };
-    
-    querySnapshot.forEach((doc) => {
-      matches.push({ id: doc.id, ...doc.data() });
-    });
-    
-    return { matches, teamStats };
-  } catch (error) {
-    console.error(`Error fetching data for team ${teamNumber}:`, error);
-    return { matches: [], teamStats: {} };
-  }
-}
-
-// Function to get data for a specific match
-async function getMatchData(db, matchNumber) {
-  try {
-    console.log(`Fetching data for match ${matchNumber}`);
-    const q = query(
-      collection(db, "scoutingData"),
-      where("matchInfo.matchNumber", "==", matchNumber.toString())
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const matches = [];
-    
-    querySnapshot.forEach((doc) => {
-      matches.push({ id: doc.id, ...doc.data() });
-    });
-    
-    return matches;
-  } catch (error) {
-    console.error(`Error fetching data for match ${matchNumber}:`, error);
-    return [];
-  }
-}
-
-// Function to get general statistics
-async function getGeneralStats(db) {
-  try {
-    console.log("Fetching general team statistics");
-    // Get all data
-    const querySnapshot = await getDocs(collection(db, "scoutingData"));
-    const allMatches = [];
-    
-    querySnapshot.forEach((doc) => {
-      allMatches.push({ id: doc.id, ...doc.data() });
-    });
-    
-    // Process data to get stats per team
+    // Set up empty result containers
     const teamStats = {};
-    allMatches.forEach((match) => {
-      // Skip if no team number
-      if (!match.matchInfo?.teamNumber) return;
+    const matchData = [];
+    
+    console.log("Attempting to access scoutingData collection...");
+    const scoutingCollection = collection(db, "scoutingData");
+    console.log("Collection reference created successfully");
+    
+    console.log("Querying Firestore for all scouting data...");
+    const querySnapshot = await getDocs(scoutingCollection);
+    
+    if (querySnapshot.empty) {
+      console.warn("No documents found in scoutingData collection");
+      return {
+        teams: {},
+        matches: [],
+        queryContext: { intent, teamNumbers, matchNumbers },
+        message: "No scouting data available"
+      };
+    }
+    
+    console.log(`Retrieved ${querySnapshot.size} documents`);
+    
+    // Process all documents
+    querySnapshot.forEach(doc => {
+      const match = { id: doc.id, ...doc.data() };
       
-      const teamNumber = match.matchInfo.teamNumber;
+      // If specific match numbers were requested, filter for those
+      if (matchNumbers.length > 0 && !matchNumbers.includes(match.matchInfo?.matchNumber)) {
+        return;
+      }
+      
+      // Add to match data array
+      matchData.push(match);
+      
+      // Process team stats
+      const teamNumber = match.matchInfo?.teamNumber;
+      if (!teamNumber) return;
+      
+      // Initialize team stats if not already done
       if (!teamStats[teamNumber]) {
         teamStats[teamNumber] = {
+          teamNumber,
           matches: [],
           averageScore: 0,
           autoPerformance: 0,
@@ -241,6 +139,21 @@ async function getGeneralStats(db) {
       
       teamStats[teamNumber].matches.push(match);
     });
+    
+    // Filter for specific teams if requested
+    if (teamNumbers.length > 0) {
+      const filteredTeamStats = {};
+      teamNumbers.forEach(team => {
+        if (teamStats[team]) {
+          filteredTeamStats[team] = teamStats[team];
+        }
+      });
+      
+      // If we found any of the requested teams, use those
+      if (Object.keys(filteredTeamStats).length > 0) {
+        teamStats = filteredTeamStats;
+      }
+    }
     
     // Calculate averages for each team
     Object.keys(teamStats).forEach((teamNumber) => {
@@ -275,10 +188,24 @@ async function getGeneralStats(db) {
       }
     });
     
-    return { teams: teamStats };
+    console.log("Retrieved team stats for teams:", Object.keys(teamStats));
+    console.log("Retrieved match data count:", matchData.length);
+    
+    // Return the relevant data
+    return {
+      teams: teamStats,
+      matches: matchData,
+      queryContext: { intent, teamNumbers, matchNumbers }
+    };
+    
   } catch (error) {
-    console.error("Error fetching general stats:", error);
-    return { teams: {} };
+    console.error("Error in retrieveRelevantData:", error);
+    return {
+      teams: {},
+      matches: [],
+      queryContext: { intent: "error", error: error.message },
+      message: "Error retrieving data: " + error.message
+    };
   }
 }
 
