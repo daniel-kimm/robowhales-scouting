@@ -19,6 +19,13 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use((req, res, next) => {
+  // If the request is for an API endpoint, set proper JSON headers
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Content-Type', 'application/json');
+  }
+  next();
+});
 
 // Serve static files from the React build
 app.use(express.static(path.join(__dirname, 'build')));
@@ -46,13 +53,30 @@ app.post('/api/chat', async (req, res) => {
     console.log("Retrieving data for query:", message);
     let relevantData;
     try {
+      // Check if scoutingData collection has documents directly 
+      const { collection, getDocs } = require('firebase/firestore');
+      const collRef = collection(db, "scoutingData");
+      const snapshot = await getDocs(collRef);
+      console.log(`Direct check: scoutingData has ${snapshot.size} documents`);
+      
+      // Now try to use the RAG system
       relevantData = await retrieveRelevantData(message, db);
-      console.log("Data retrieved successfully");
+      console.log("RAG System returned:", {
+        teamCount: Object.keys(relevantData.teams || {}).length,
+        matchCount: (relevantData.matches || []).length,
+        intent: relevantData.queryContext?.intent,
+        error: relevantData.queryContext?.errorDetails || null
+      });
+      
+      if (Object.keys(relevantData.teams || {}).length === 0) {
+        console.warn("WARNING: RAG system returned no team data!");
+      }
+      
     } catch (ragError) {
       console.error("Error retrieving relevant data:", ragError);
       return res.status(500).json({ 
         error: 'Failed to retrieve relevant data',
-        details: process.env.NODE_ENV === 'development' ? ragError.message : 'Internal server error'
+        details: ragError.message
       });
     }
     
@@ -61,17 +85,17 @@ app.post('/api/chat', async (req, res) => {
     
     return res.status(200).json({ 
       response: aiResponse,
-      context: {
-        teamsAnalyzed: Object.keys(relevantData.teams || {}).length,
-        matchesAnalyzed: (relevantData.matches || []).map(m => m.matchInfo?.matchNumber).filter(Boolean),
+      relevantData: {
+        teamCount: Object.keys(relevantData.teams || {}).length,
+        matchCount: (relevantData.matches || []).length,
         intent: relevantData.queryContext?.intent
       }
     });
   } catch (error) {
-    console.error('Error processing chat request:', error);
+    console.error("Error processing chat request:", error);
     return res.status(500).json({ 
-      error: 'An error occurred while processing your request',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: 'Failed to process request',
+      details: error.message
     });
   }
 });
@@ -321,7 +345,7 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
   }
 }
 
-// Catch-all handler to serve React app
+// Catch-all handler to serve React app - should be AFTER all API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });

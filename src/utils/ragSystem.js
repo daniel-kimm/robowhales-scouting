@@ -88,7 +88,7 @@ async function retrieveRelevantData(query, externalDb = null) {
     
     // Set up empty result containers
     let teamStats = {};
-    const matchData = [];
+    let matchData = [];
     
     console.log("Attempting to access scoutingData collection...");
     const scoutingCollection = collection(firestoreDb, "scoutingData");
@@ -127,44 +127,56 @@ async function retrieveRelevantData(query, externalDb = null) {
       };
     }
     
-    console.log(`Retrieved ${querySnapshot.size} documents`);
-    let processedDocs = 0;
-    
-    // Process all documents
-    querySnapshot.forEach(doc => {
-      processedDocs++;
-      const match = { id: doc.id, ...doc.data() };
-      
-      console.log(`Processing document ${processedDocs}: Match ${match.matchInfo?.matchNumber}, Team ${match.matchInfo?.teamNumber}`);
-      
-      // If specific match numbers were requested, filter for those
-      if (matchNumbers.length > 0 && !matchNumbers.includes(match.matchInfo?.matchNumber)) {
-        return;
-      }
-      
-      // Add to match data array
-      matchData.push(match);
-      
-      // Process team stats
-      const teamNumber = match.matchInfo?.teamNumber;
-      if (!teamNumber) return;
-      
-      // Initialize team stats if not already done
-      if (!teamStats[teamNumber]) {
-        teamStats[teamNumber] = {
-          teamNumber,
-          matches: [],
-          averageScore: 0,
-          autoPerformance: 0,
-          teleopPerformance: 0,
-          endgamePerformance: 0,
-          climbSuccess: 0,
-          defensiveRating: 0
+    console.log(`Processing ${querySnapshot.size} documents from scoutingData`);
+
+    try {
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        console.log(`Processing document ${doc.id}`);
+        
+        if (!data.matchInfo || !data.matchInfo.teamNumber) {
+          console.warn(`Document ${doc.id} has missing or invalid matchInfo`);
+          return; // Skip this document
+        }
+        
+        const teamNumber = data.matchInfo.teamNumber;
+        const match = {
+          id: doc.id,
+          matchInfo: data.matchInfo,
+          scores: data.scores || {},
+          autonomous: data.autonomous || {},
+          teleop: data.teleop || {},
+          endgame: data.endgame || {},
+          additional: data.additional || {},
+          timestamp: data.timestamp
         };
-      }
+        
+        // Add to match data
+        matchData.push(match);
+        
+        // Initialize team stats if needed
+        if (!teamStats[teamNumber]) {
+          teamStats[teamNumber] = {
+            teamNumber,
+            matches: [],
+            averageScore: 0,
+            autoPerformance: 0,
+            teleopPerformance: 0,
+            endgamePerformance: 0,
+            climbSuccess: 0,
+            defensiveRating: 0
+          };
+        }
+        
+        teamStats[teamNumber].matches.push(match);
+      });
       
-      teamStats[teamNumber].matches.push(match);
-    });
+      console.log(`Successfully processed all documents. Team count: ${Object.keys(teamStats).length}`);
+    } catch (processError) {
+      console.error("Error processing documents:", processError);
+      console.error("Error stack:", processError.stack);
+      // Continue with what we've got so far
+    }
     
     // Filter for specific teams if requested
     if (teamNumbers.length > 0) {
