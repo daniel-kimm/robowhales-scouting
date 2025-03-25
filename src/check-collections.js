@@ -1,5 +1,5 @@
 const { initializeApp } = require('firebase/app');
-const { getFirestore, listCollections } = require('firebase/firestore');
+const { getFirestore, collection, getDocs } = require('firebase/firestore');
 
 // Firebase configuration
 const firebaseConfig = {
@@ -12,50 +12,59 @@ const firebaseConfig = {
   measurementId: "G-RW32SXHSRX"
 };
 
-async function checkAllCollections() {
+async function runCollectionDiagnostics() {
   try {
-    console.log("Initializing Firebase...");
+    console.log("============ FIRESTORE COLLECTION DIAGNOSTICS ============");
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    console.log("Firebase initialized successfully in diagnostics");
     
-    // Check all available collections
-    console.log("Attempting to list all collections...");
-    
-    // Note: Firestore client SDK doesn't have direct listCollections
-    // Let's try to access a few potential collection names
-    const possibleCollections = [
+    // Check all potential collection names
+    const collections = [
       "scoutingData",
       "scouting_data",
-      "ScoutingData", 
+      "ScoutingData",
+      "Matches",
       "matches",
+      "Teams",
       "teams",
+      "Events",
       "events",
       "users"
     ];
     
-    for (const collName of possibleCollections) {
+    console.log("Attempting to check collections...");
+    for (const collName of collections) {
       try {
-        const { collection, getDocs } = require('firebase/firestore');
+        console.log(`Checking collection: ${collName}`);
         const collRef = collection(db, collName);
         const snapshot = await getDocs(collRef);
-        console.log(`Collection '${collName}': ${snapshot.size} documents found`);
+        console.log(`Collection '${collName}' exists with ${snapshot.size} documents`);
         
         if (snapshot.size > 0) {
-          // Show the first document as sample
-          const firstDoc = snapshot.docs[0].data();
-          console.log(`Sample document from '${collName}':`, JSON.stringify(firstDoc, null, 2));
+          const doc = snapshot.docs[0];
+          console.log(`Sample document ID: ${doc.id}`);
+          console.log(`Sample document data:`, JSON.stringify(doc.data(), null, 2));
+        } else {
+          console.log(`Collection '${collName}' is empty`);
         }
-      } catch (err) {
-        console.log(`Error checking collection '${collName}':`, err.message);
+      } catch (error) {
+        console.log(`Error accessing collection '${collName}':`, error.message);
       }
     }
     
-    return "Collections check complete";
+    console.log("============ END FIRESTORE DIAGNOSTICS ============");
+    return "Diagnostics completed";
   } catch (error) {
-    console.error("Error checking collections:", error);
-    return { error: error.message };
+    console.error("Critical error in diagnostics:", error);
+    return `Critical error: ${error.message}`;
   }
 }
 
-// Run the function
+// Run the diagnostics if this script is executed directly
+if (require.main === module) {
+  runCollectionDiagnostics().then(console.log).catch(console.error);
+}
+
+module.exports = { runCollectionDiagnostics }; 
 checkAllCollections().then(console.log).catch(console.error); 

@@ -7,7 +7,6 @@ const fs = require('fs');
 const { db } = require('./src/firebase.config');
 const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
 const { retrieveRelevantData } = require('./src/utils/ragSystem');
-const { listAllCollections, getAllDocuments } = require('./src/firebase.admin');
 
 // Initialize Express
 const app = express();
@@ -146,25 +145,6 @@ app.get('/api/check-collections', async (req, res) => {
     res.status(200).json(results);
   } catch (error) {
     console.error("Error checking collections:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Add admin route for debugging
-app.get('/api/admin/collections', async (req, res) => {
-  try {
-    const result = await listAllCollections();
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/admin/collection/:name', async (req, res) => {
-  try {
-    const result = await getAllDocuments(req.params.name);
-    res.status(200).json(result);
-  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
