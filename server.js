@@ -298,6 +298,81 @@ app.get('/api/trigger-debug', async (req, res) => {
   }
 });
 
+// Add a RAG system diagnostic endpoint
+app.get('/api/rag-diagnostics', async (req, res) => {
+  try {
+    const { collection, getDocs } = require('firebase/firestore');
+    const collRef = collection(db, "scoutingData");
+    const snapshot = await getDocs(collRef);
+    
+    // Process documents manually to see where the issue might be
+    const documents = [];
+    const teamStats = {};
+    const errors = [];
+    
+    snapshot.forEach((doc, index) => {
+      try {
+        const data = doc.data();
+        documents.push({
+          id: doc.id,
+          hasMatchInfo: !!data.matchInfo,
+          hasTeamNumber: !!(data.matchInfo && data.matchInfo.teamNumber),
+          teamNumber: data.matchInfo?.teamNumber,
+          hasScores: !!data.scores,
+          totalPoints: data.scores?.totalPoints
+        });
+        
+        // Try to process as the RAG system would
+        if (data.matchInfo && data.matchInfo.teamNumber) {
+          const teamNumber = data.matchInfo.teamNumber;
+          
+          if (!teamStats[teamNumber]) {
+            teamStats[teamNumber] = {
+              teamNumber,
+              matches: [],
+              totalScore: 0,
+              matchCount: 0,
+              averageScore: 0
+            };
+          }
+          
+          teamStats[teamNumber].matches.push(doc.id);
+          teamStats[teamNumber].matchCount++;
+          
+          if (data.scores && typeof data.scores.totalPoints === 'number') {
+            teamStats[teamNumber].totalScore += data.scores.totalPoints;
+            teamStats[teamNumber].averageScore = 
+              teamStats[teamNumber].totalScore / teamStats[teamNumber].matchCount;
+          }
+        }
+      } catch (docError) {
+        errors.push({
+          docId: doc.id,
+          error: docError.message,
+          index
+        });
+      }
+    });
+    
+    // Calculate team performance metrics
+    Object.values(teamStats).forEach(team => {
+      team.averageScore = team.totalScore / team.matchCount;
+    });
+    
+    res.status(200).json({
+      collectionSize: snapshot.size,
+      documentSamples: documents.slice(0, 3), // First 3 documents
+      teamStatsCount: Object.keys(teamStats).length,
+      teamStatsSample: Object.values(teamStats).slice(0, 3), // First 3 teams
+      errors: errors,
+      processingSuccessful: errors.length === 0
+    });
+  } catch (error) {
+    console.error("RAG diagnostics error:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
   console.log("Generating AI response with data:", {
     teamsCount: Object.keys(relevantData.teams || {}).length,
