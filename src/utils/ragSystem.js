@@ -21,10 +21,20 @@ function extractMatchNumbers(text) {
   return [...new Set(matches)];
 }
 
-// Determine the intent of the query
+// Function to determine the intent of the query - improve to better detect match-specific requests
 function determineQueryIntent(query) {
   const queryLower = query.toLowerCase();
   
+  // Add new patterns for single match / best match queries
+  if (/\b(?:best|highest|top|strongest|most impressive|best performing|highest scoring)\s+(?:game|match|performance|showing)\b/i.test(queryLower)) {
+    return "best_match";
+  }
+  
+  if (/\b(?:match|game)\s+(?:score|details|numbers|statistics|stats|information|data)\b/i.test(queryLower)) {
+    return "match_details";
+  }
+  
+  // Existing patterns
   if (/\b(?:compare|versus|vs\.?|against|better)\b/i.test(queryLower)) {
     return "team_comparison";
   }
@@ -208,44 +218,16 @@ async function retrieveRelevantData(userMessage, db) {
   }
 }
 
-// Simple query parsing function
+// Simple query parsing function - update to better detect match-specific requests
 function parseUserQuery(message) {
   // Default values
-  let intent = "team_performance";
-  let teamNumbers = [];
-  let matchNumbers = [];
-  
-  // Convert to lowercase for easier matching
   const lowerMessage = message.toLowerCase();
   
-  // Check for team numbers - common patterns like "team 254" or "#254"
-  const teamRegex = /team\s+(\d+)|#(\d+)/g;
-  let teamMatch;
+  // Determine intent using the improved function
+  const intent = determineQueryIntent(lowerMessage);
   
-  while ((teamMatch = teamRegex.exec(lowerMessage)) !== null) {
-    const teamNum = teamMatch[1] || teamMatch[2];
-    teamNumbers.push(teamNum);
-  }
-  
-  // Check for match numbers - patterns like "match 5" or "qualifying 5"
-  const matchRegex = /match\s+(\d+)|qualifying\s+(\d+)|qual\s+(\d+)|q(\d+)/g;
-  let matchMatch;
-  
-  while ((matchMatch = matchRegex.exec(lowerMessage)) !== null) {
-    const matchNum = matchMatch[1] || matchMatch[2] || matchMatch[3] || matchMatch[4];
-    matchNumbers.push(matchNum);
-  }
-  
-  // Determine intent based on keywords
-  if (lowerMessage.includes("match") || lowerMessage.includes("qualifying") || matchNumbers.length > 0) {
-    intent = "match_analysis";
-  } else if (lowerMessage.includes("compare") || lowerMessage.includes("vs") || lowerMessage.includes("versus")) {
-    intent = "team_comparison";
-  } else if (lowerMessage.includes("rank") || lowerMessage.includes("best") || lowerMessage.includes("top")) {
-    intent = "team_ranking";
-  } else if (teamNumbers.length > 0) {
-    intent = "team_performance";
-  }
+  const teamNumbers = extractTeamNumbers(message);
+  const matchNumbers = extractMatchNumbers(message);
   
   return { intent, teamNumbers, matchNumbers };
 }
