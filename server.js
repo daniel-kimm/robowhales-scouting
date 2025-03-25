@@ -243,6 +243,61 @@ app.get('/api/diagnose-collections', async (req, res) => {
   }
 });
 
+// Add this debug endpoint somewhere before your catch-all handler
+app.get('/api/trigger-debug', async (req, res) => {
+  const timestamp = new Date().toISOString();
+  console.log(`=== DEBUG TRIGGERED AT ${timestamp} ===`);
+  
+  try {
+    // Try direct Firestore access
+    const { collection, getDocs } = require('firebase/firestore');
+    console.log("Attempting to access Firestore directly...");
+    
+    const collRef = collection(db, "scoutingData");
+    console.log("Collection reference created");
+    
+    const snapshot = await getDocs(collRef);
+    console.log(`Found ${snapshot.size} documents in scoutingData`);
+    
+    // Process a document as a test
+    if (snapshot.size > 0) {
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      console.log("First document ID:", doc.id);
+      console.log("First document data:", JSON.stringify(data, null, 2));
+      
+      // Test the document structure
+      if (data.matchInfo && data.matchInfo.teamNumber) {
+        console.log(`Document has valid teamNumber: ${data.matchInfo.teamNumber}`);
+        
+        // Create a test team stats object
+        const teamNumber = data.matchInfo.teamNumber;
+        const teamStats = {
+          [teamNumber]: {
+            teamNumber,
+            matches: [data],
+            averageScore: data.scores?.totalPoints || 0
+          }
+        };
+        
+        console.log("Successfully created test team stats:", teamStats);
+      } else {
+        console.log("Document has invalid or missing teamNumber");
+      }
+    }
+    
+    return res.status(200).json({
+      debug: true,
+      timestamp,
+      documents: snapshot.size,
+      message: "Debug triggered successfully - check logs"
+    });
+  } catch (error) {
+    console.error("Error in debug endpoint:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
   console.log("Generating AI response with data:", {
     teamsCount: Object.keys(relevantData.teams || {}).length,
@@ -352,5 +407,17 @@ app.get('*', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] Server running on port ${PORT}`);
+  console.log(`[${timestamp}] Environment: ${process.env.NODE_ENV}`);
+  console.log(`[${timestamp}] Firebase config loaded: ${!!firebaseConfig}`);
+  console.log(`[${timestamp}] Firestore DB available: ${!!db}`);
+  
+  // Log routes
+  console.log(`[${timestamp}] Available routes:`);
+  app._router.stack.forEach(r => {
+    if (r.route && r.route.path) {
+      console.log(`[${timestamp}] - ${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
+    }
+  });
 });
