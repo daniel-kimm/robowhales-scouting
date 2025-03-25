@@ -1,5 +1,5 @@
-const { initializeApp } = require('firebase/app');
-const { getFirestore } = require('firebase/firestore');
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -14,23 +14,8 @@ const firebaseConfig = {
 
 // Initialize Firebase
 console.log("Initializing Firebase in firebase.config.js...");
-let firebaseApp;
-let db;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+console.log("Firebase initialized successfully in firebase.config.js");
 
-try {
-  firebaseApp = initializeApp(firebaseConfig);
-  db = getFirestore(firebaseApp);
-  console.log("Firebase initialized successfully in firebase.config.js");
-} catch (error) {
-  if (!/already exists/.test(error.message)) {
-    console.error('Firebase initialization error in firebase.config.js:', error.stack);
-  } else {
-    console.log("Firebase already initialized in firebase.config.js");
-    db = getFirestore();
-  }
-}
-
-module.exports = {
-  db,
-  firebaseApp
-};
+export { app, db };

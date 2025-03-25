@@ -58,18 +58,13 @@ async function retrieveRelevantData(userMessage, db) {
     // Parse the user query to determine intent and extract key information
     const { intent, teamNumbers, matchNumbers } = parseUserQuery(userMessage);
     
-    console.log(`Query parsed with intent: ${intent}, teams: ${teamNumbers}, matches: ${matchNumbers}`);
-    
     // Create the collection reference
     const scoutingCollection = collection(db, "scoutingData");
     
-    // Get all documents (we'll filter client-side for now)
-    console.log("Querying Firestore for all scouting data...");
+    // Get all documents
     const querySnapshot = await getDocs(scoutingCollection);
-    console.log(`Found ${querySnapshot.size} documents in scoutingData`);
     
     if (querySnapshot.empty) {
-      console.warn("No documents found in scoutingData collection!");
       return {
         teams: {},
         matches: [],
@@ -90,7 +85,6 @@ async function retrieveRelevantData(userMessage, db) {
       const data = doc.data();
       
       if (!data.matchInfo || !data.matchInfo.teamNumber) {
-        console.warn(`Document ${doc.id} has invalid structure`);
         return; // Skip this document
       }
       
@@ -208,9 +202,7 @@ async function retrieveRelevantData(userMessage, db) {
       matches: [],
       queryContext: { 
         intent: "error", 
-        errorDetails: error.message,
-        errorType: error.constructor.name,
-        errorAt: new Date().toISOString()
+        errorDetails: error.message
       }
     };
   }
