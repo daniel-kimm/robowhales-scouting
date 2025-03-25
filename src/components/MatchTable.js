@@ -16,6 +16,7 @@ function MatchTable({ matches, onSelectMatch }) {
             <th>Match</th>
             <th>Team</th>
             <th>Alliance</th>
+            <th>Scouter</th>
             <th>Auto</th>
             <th>Teleop</th>
             <th>Endgame</th>
@@ -34,6 +35,7 @@ function MatchTable({ matches, onSelectMatch }) {
               <td className={match.matchInfo?.alliance || 'unknown'}>
                 {match.matchInfo?.alliance || 'Unknown'}
               </td>
+              <td>{match.matchInfo?.scouterInitials || '—'}</td>
               <td>{match.scores?.autoPoints || 0}</td>
               <td>{match.scores?.teleopPoints || 0}</td>
               <td>{match.scores?.bargePoints || 0}</td>
