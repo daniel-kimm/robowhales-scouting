@@ -323,7 +323,7 @@ function ScoutingForm() {
               value={formData.matchInfo.scouterInitials}
               onChange={(e) => handleInputChange('matchInfo', 'scouterInitials', e.target.value)}
               maxLength="3"
-              placeholder="Your initials"
+              placeholder=""
               required
             />
           </div>

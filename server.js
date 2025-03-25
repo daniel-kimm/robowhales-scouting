@@ -204,123 +204,95 @@ app.get('/api/diagnose-collections', async (req, res) => {
 });
 
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
-  console.log("Generating AI response with data:", {
-    teamsCount: Object.keys(relevantData.teams || {}).length,
-    matchesCount: (relevantData.matches || []).length,
-    intent: relevantData.queryContext?.intent
-  });
-  
-  // Format the relevant data for prompting
-  let formattedData = "";
-  
-  // Format teams data
-  if (Object.keys(relevantData.teams || {}).length > 0) {
-    formattedData += "TEAM PERFORMANCE DATA:\n";
-    
-    Object.values(relevantData.teams).forEach(team => {
-      formattedData += `Team ${team.teamNumber}:\n`;
-      formattedData += `- Matches played: ${team.matches.length}\n`;
-      formattedData += `- Average total score: ${team.averageScore.toFixed(1)} points\n`;
-      
-      // Only include these if they exist
-      if (typeof team.autoPerformance === 'number') {
-        formattedData += `- Average auto score: ${team.autoPerformance.toFixed(1)} points\n`;
-      }
-      
-      if (typeof team.teleopPerformance === 'number') {
-        formattedData += `- Average teleop score: ${team.teleopPerformance.toFixed(1)} points\n`;
-      }
-      
-      if (typeof team.endgamePerformance === 'number') {
-        formattedData += `- Average endgame score: ${team.endgamePerformance.toFixed(1)} points\n`;
-      }
-      
-      if (typeof team.climbSuccess === 'number') {
-        formattedData += `- Climb success rate: ${(team.climbSuccess * 100).toFixed(1)}%\n`;
-      }
-      
-      if (typeof team.defensiveRating === 'number' && team.defensiveRating > 0) {
-        formattedData += `- Defensive rating: ${team.defensiveRating.toFixed(1)}/10\n`;
-      }
-      
-      formattedData += "\n";
-    });
-  }
-  
-  // Format match data if needed
-  if ((relevantData.matches || []).length > 0 && relevantData.queryContext?.intent === "match_analysis") {
-    formattedData += "MATCH DATA:\n";
-    
-    relevantData.matches.forEach(match => {
-      formattedData += `Match ${match.matchInfo?.matchNumber || 'unknown'} - Team ${match.matchInfo?.teamNumber || 'unknown'} (${match.matchInfo?.alliance || 'unknown'}):\n`;
-      
-      if (match.scores && typeof match.scores.totalPoints === 'number') {
-        formattedData += `- Total score: ${match.scores.totalPoints} points\n`;
-      }
-      
-      if (match.scores && typeof match.scores.autoPoints === 'number') {
-        formattedData += `- Auto: ${match.scores.autoPoints} points\n`;
-      }
-      
-      if (match.scores && typeof match.scores.teleopPoints === 'number') {
-        formattedData += `- Teleop: ${match.scores.teleopPoints} points\n`;
-      }
-      
-      if (match.scores && typeof match.scores.bargePoints === 'number') {
-        formattedData += `- Endgame: ${match.scores.bargePoints} points\n`;
-      }
-      
-      if (match.additional?.notes) {
-        formattedData += `- Notes: ${match.additional.notes}\n`;
-      }
-      
-      formattedData += "\n";
-    });
-  }
-  
-  // If no data is available
-  if (formattedData === "") {
-    formattedData = "No specific scouting data is available for this query.";
-  }
-  
-  // Create system prompt
-  const systemPrompt = `
-    You are an FRC scouting assistant for Team 9032.
-    
-    When analyzing team performance:
-    1. ALWAYS prioritize average scores over total scores
-    2. Consider the number of matches played when comparing teams
-    3. Include defensive capabilities in your analysis
-    4. For rankings, teams with fewer than 3 matches should be noted as having limited data
-    
-    Here is the relevant scouting data:
-    ${formattedData}
-  `;
-  
-  console.log("SYSTEM PROMPT:", systemPrompt);
-  
-  // Format conversation history
-  const formattedHistory = conversationHistory.map(msg => ({
-    role: msg.role,
-    content: msg.content
-  }));
-  
-  // Create messages array
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...formattedHistory,
-    { role: "user", content: message }
-  ];
-  
   try {
-    if (!openai) {
-      console.log("OpenAI API not initialized, returning mock response");
-      return `I found the following team data: ${Object.keys(relevantData.teams || {}).join(', ')}. The RAG system processed ${Object.keys(relevantData.teams || {}).length} teams from ${(relevantData.matches || []).length} matches.`;
+    // Format the relevant data for prompting
+    let formattedData = "";
+    
+    // Team data formatter
+    if (relevantData.teams && Object.keys(relevantData.teams).length > 0) {
+      formattedData += "### Team Data\n\n";
+      
+      Object.entries(relevantData.teams).forEach(([teamNumber, stats]) => {
+        formattedData += `#### Team ${teamNumber}\n`;
+        formattedData += `- Average Score: ${stats.averageScore.toFixed(1)} points\n`;
+        
+        if (stats.autoPerformance !== undefined) {
+          formattedData += `- Average Auto: ${stats.autoPerformance.toFixed(1)} points\n`;
+        }
+        
+        if (stats.teleopPerformance !== undefined) {
+          formattedData += `- Average Teleop: ${stats.teleopPerformance.toFixed(1)} points\n`;
+        }
+        
+        if (stats.endgamePerformance !== undefined) {
+          formattedData += `- Average Endgame: ${stats.endgamePerformance.toFixed(1)} points\n`;
+        }
+        
+        formattedData += `- Match Count: ${stats.matchCount}\n\n`;
+        
+        // Important: Add individual match details
+        if (stats.matches && stats.matches.length > 0) {
+          formattedData += "##### Individual Match Scores:\n";
+          
+          // Sort matches by match number
+          const sortedMatches = [...stats.matches].sort((a, b) => 
+            parseInt(a.matchInfo.matchNumber) - parseInt(b.matchInfo.matchNumber)
+          );
+          
+          sortedMatches.forEach(match => {
+            const totalPoints = match.scores?.totalPoints || 0;
+            const autoPoints = match.scores?.autoPoints || 0;
+            const teleopPoints = match.scores?.teleopPoints || 0;
+            const endgamePoints = match.scores?.bargePoints || 0;
+            
+            formattedData += `- Match ${match.matchInfo.matchNumber}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})\n`;
+            
+            // Add notes if available
+            if (match.additional?.notes) {
+              formattedData += `  - Notes: ${match.additional.notes}\n`;
+            }
+          });
+          
+          // If this is a best_match intent, explicitly identify the best match
+          if (relevantData.queryContext?.intent === "best_match") {
+            const bestMatch = [...stats.matches].sort((a, b) => 
+              (b.scores?.totalPoints || 0) - (a.scores?.totalPoints || 0)
+            )[0];
+            
+            if (bestMatch) {
+              formattedData += `\n##### Best Match:\n`;
+              formattedData += `- Match ${bestMatch.matchInfo.matchNumber} was the highest scoring with ${bestMatch.scores?.totalPoints || 0} total points\n`;
+              formattedData += `  - Auto: ${bestMatch.scores?.autoPoints || 0}, Teleop: ${bestMatch.scores?.teleopPoints || 0}, Endgame: ${bestMatch.scores?.bargePoints || 0}\n`;
+            }
+          }
+          
+          formattedData += "\n";
+        }
+      });
     }
     
-    const response = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
-      messages: messages,
+    // Create the prompt with instructions tailored to the query intent
+    let systemPrompt = `You are a helpful FRC (FIRST Robotics Competition) scouting assistant. You help teams analyze match data and provide insights based on scouting information.
+
+For the given query, provide a detailed analysis based on the data provided below. 
+
+${formattedData}
+
+When answering:
+- If asked about a team's "best game" or "best match", provide the specific match details (match number and score breakdown).
+- When discussing overall performance, include both averages AND the individual match that had the highest score.
+- If specific match numbers are mentioned, focus on those match details.
+- If no data is available for a specific team or match, clearly state this limitation.
+- Keep your analysis concise but informative, focused on the question asked.`;
+
+    // Send the request to OpenAI
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory.map(msg => ({ role: msg.role, content: msg.content })),
+        { role: "user", content: message }
+      ],
       temperature: 0.7,
       max_tokens: 800
     });
