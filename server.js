@@ -46,55 +46,43 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    // Check Firebase connection
-    console.log("Checking Firebase connection: DB instance available:", !!db);
-    
-    // Retrieve relevant data based on the user's query, passing the Firestore instance
-    console.log("Retrieving data for query:", message);
+    // Get relevant data
     let relevantData;
     try {
-      // Check if scoutingData collection has documents directly 
-      const { collection, getDocs } = require('firebase/firestore');
-      const collRef = collection(db, "scoutingData");
-      const snapshot = await getDocs(collRef);
-      console.log(`Direct check: scoutingData has ${snapshot.size} documents`);
-      
-      // Now try to use the RAG system
       relevantData = await retrieveRelevantData(message, db);
-      console.log("RAG System returned:", {
-        teamCount: Object.keys(relevantData.teams || {}).length,
-        matchCount: (relevantData.matches || []).length,
-        intent: relevantData.queryContext?.intent,
-        error: relevantData.queryContext?.errorDetails || null
-      });
-      
-      if (Object.keys(relevantData.teams || {}).length === 0) {
-        console.warn("WARNING: RAG system returned no team data!");
-      }
-      
+      console.log(`RAG system processed ${Object.keys(relevantData.teams || {}).length} teams`);
     } catch (ragError) {
-      console.error("Error retrieving relevant data:", ragError);
+      console.error("Error in retrieveRelevantData:", ragError);
       return res.status(500).json({ 
-        error: 'Failed to retrieve relevant data',
+        error: 'Failed to retrieve relevant data', 
         details: ragError.message
       });
     }
     
-    // Generate a response using OpenAI
-    const aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
+    // Generate AI response
+    let aiResponse;
+    try {
+      aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
+    } catch (aiError) {
+      console.error("Error in generateAIResponse:", aiError);
+      return res.status(500).json({ 
+        error: 'Failed to generate AI response', 
+        details: aiError.message
+      });
+    }
     
     return res.status(200).json({ 
       response: aiResponse,
-      relevantData: {
+      data: {
         teamCount: Object.keys(relevantData.teams || {}).length,
         matchCount: (relevantData.matches || []).length,
         intent: relevantData.queryContext?.intent
       }
     });
   } catch (error) {
-    console.error("Error processing chat request:", error);
+    console.error("Error in chat endpoint:", error);
     return res.status(500).json({ 
-      error: 'Failed to process request',
+      error: 'Failed to process request', 
       details: error.message
     });
   }
@@ -381,6 +369,34 @@ app.post('/api/test-rag', async (req, res) => {
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
+    
+    console.log("Testing RAG system with message:", message);
+    
+    // Get relevant data
+    const relevantData = await retrieveRelevantData(message, db);
+    
+    // Return the full data for analysis
+    return res.status(200).json({
+      message,
+      relevantData: {
+        teams: relevantData.teams || {},
+        matches: relevantData.matches || [],
+        queryContext: relevantData.queryContext || {},
+        teamsCount: Object.keys(relevantData.teams || {}).length,
+        matchesCount: (relevantData.matches || []).length
+      }
+    });
+  } catch (error) {
+    console.error("Error in test-rag endpoint:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Add a GET version of the test-rag endpoint
+app.get('/api/test-rag-get', async (req, res) => {
+  try {
+    // Use a default test message
+    const message = req.query.message || "How did team 9032 perform?";
     
     console.log("Testing RAG system with message:", message);
     
