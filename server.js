@@ -39,52 +39,24 @@ const openai = new OpenAIApi(configuration);
 // API endpoints
 app.post('/api/chat', async (req, res) => {
   try {
-    console.log("Received API request:", req.body);
     const { message, conversationHistory = [] } = req.body;
     
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    // Get relevant data
-    let relevantData;
-    try {
-      relevantData = await retrieveRelevantData(message, db);
-      console.log(`RAG system processed ${Object.keys(relevantData.teams || {}).length} teams`);
-    } catch (ragError) {
-      console.error("Error in retrieveRelevantData:", ragError);
-      return res.status(500).json({ 
-        error: 'Failed to retrieve relevant data', 
-        details: ragError.message
-      });
-    }
+    // Retrieve relevant data based on the user's query
+    const relevantData = await retrieveRelevantData(message, db);
     
-    // Generate AI response
-    let aiResponse;
-    try {
-      aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
-    } catch (aiError) {
-      console.error("Error in generateAIResponse:", aiError);
-      return res.status(500).json({ 
-        error: 'Failed to generate AI response', 
-        details: aiError.message
-      });
-    }
+    // Generate a response using OpenAI
+    const aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
     
     return res.status(200).json({ 
-      response: aiResponse,
-      data: {
-        teamCount: Object.keys(relevantData.teams || {}).length,
-        matchCount: (relevantData.matches || []).length,
-        intent: relevantData.queryContext?.intent
-      }
+      response: aiResponse
     });
   } catch (error) {
-    console.error("Error in chat endpoint:", error);
-    return res.status(500).json({ 
-      error: 'Failed to process request', 
-      details: error.message
-    });
+    console.error("Error processing chat request:", error);
+    return res.status(500).json({ error: 'Failed to process request' });
   }
 });
 
@@ -231,195 +203,6 @@ app.get('/api/diagnose-collections', async (req, res) => {
   }
 });
 
-// Add this debug endpoint somewhere before your catch-all handler
-app.get('/api/trigger-debug', async (req, res) => {
-  const timestamp = new Date().toISOString();
-  console.log(`=== DEBUG TRIGGERED AT ${timestamp} ===`);
-  
-  try {
-    // Try direct Firestore access
-    const { collection, getDocs } = require('firebase/firestore');
-    console.log("Attempting to access Firestore directly...");
-    
-    const collRef = collection(db, "scoutingData");
-    console.log("Collection reference created");
-    
-    const snapshot = await getDocs(collRef);
-    console.log(`Found ${snapshot.size} documents in scoutingData`);
-    
-    // Process a document as a test
-    if (snapshot.size > 0) {
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      console.log("First document ID:", doc.id);
-      console.log("First document data:", JSON.stringify(data, null, 2));
-      
-      // Test the document structure
-      if (data.matchInfo && data.matchInfo.teamNumber) {
-        console.log(`Document has valid teamNumber: ${data.matchInfo.teamNumber}`);
-        
-        // Create a test team stats object
-        const teamNumber = data.matchInfo.teamNumber;
-        const teamStats = {
-          [teamNumber]: {
-            teamNumber,
-            matches: [data],
-            averageScore: data.scores?.totalPoints || 0
-          }
-        };
-        
-        console.log("Successfully created test team stats:", teamStats);
-      } else {
-        console.log("Document has invalid or missing teamNumber");
-      }
-    }
-    
-    return res.status(200).json({
-      debug: true,
-      timestamp,
-      documents: snapshot.size,
-      message: "Debug triggered successfully - check logs"
-    });
-  } catch (error) {
-    console.error("Error in debug endpoint:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-// Add a RAG system diagnostic endpoint
-app.get('/api/rag-diagnostics', async (req, res) => {
-  try {
-    const { collection, getDocs } = require('firebase/firestore');
-    const collRef = collection(db, "scoutingData");
-    const snapshot = await getDocs(collRef);
-    
-    // Process documents manually to see where the issue might be
-    const documents = [];
-    const teamStats = {};
-    const errors = [];
-    
-    snapshot.forEach((doc, index) => {
-      try {
-        const data = doc.data();
-        documents.push({
-          id: doc.id,
-          hasMatchInfo: !!data.matchInfo,
-          hasTeamNumber: !!(data.matchInfo && data.matchInfo.teamNumber),
-          teamNumber: data.matchInfo?.teamNumber,
-          hasScores: !!data.scores,
-          totalPoints: data.scores?.totalPoints
-        });
-        
-        // Try to process as the RAG system would
-        if (data.matchInfo && data.matchInfo.teamNumber) {
-          const teamNumber = data.matchInfo.teamNumber;
-          
-          if (!teamStats[teamNumber]) {
-            teamStats[teamNumber] = {
-              teamNumber,
-              matches: [],
-              totalScore: 0,
-              matchCount: 0,
-              averageScore: 0
-            };
-          }
-          
-          teamStats[teamNumber].matches.push(doc.id);
-          teamStats[teamNumber].matchCount++;
-          
-          if (data.scores && typeof data.scores.totalPoints === 'number') {
-            teamStats[teamNumber].totalScore += data.scores.totalPoints;
-            teamStats[teamNumber].averageScore = 
-              teamStats[teamNumber].totalScore / teamStats[teamNumber].matchCount;
-          }
-        }
-      } catch (docError) {
-        errors.push({
-          docId: doc.id,
-          error: docError.message,
-          index
-        });
-      }
-    });
-    
-    // Calculate team performance metrics
-    Object.values(teamStats).forEach(team => {
-      team.averageScore = team.totalScore / team.matchCount;
-    });
-    
-    res.status(200).json({
-      collectionSize: snapshot.size,
-      documentSamples: documents.slice(0, 3), // First 3 documents
-      teamStatsCount: Object.keys(teamStats).length,
-      teamStatsSample: Object.values(teamStats).slice(0, 3), // First 3 teams
-      errors: errors,
-      processingSuccessful: errors.length === 0
-    });
-  } catch (error) {
-    console.error("RAG diagnostics error:", error);
-    res.status(500).json({ error: error.message, stack: error.stack });
-  }
-});
-
-// Add a test RAG endpoint
-app.post('/api/test-rag', async (req, res) => {
-  try {
-    const { message } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
-    }
-    
-    console.log("Testing RAG system with message:", message);
-    
-    // Get relevant data
-    const relevantData = await retrieveRelevantData(message, db);
-    
-    // Return the full data for analysis
-    return res.status(200).json({
-      message,
-      relevantData: {
-        teams: relevantData.teams || {},
-        matches: relevantData.matches || [],
-        queryContext: relevantData.queryContext || {},
-        teamsCount: Object.keys(relevantData.teams || {}).length,
-        matchesCount: (relevantData.matches || []).length
-      }
-    });
-  } catch (error) {
-    console.error("Error in test-rag endpoint:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-// Add a GET version of the test-rag endpoint
-app.get('/api/test-rag-get', async (req, res) => {
-  try {
-    // Use a default test message
-    const message = req.query.message || "How did team 9032 perform?";
-    
-    console.log("Testing RAG system with message:", message);
-    
-    // Get relevant data
-    const relevantData = await retrieveRelevantData(message, db);
-    
-    // Return the full data for analysis
-    return res.status(200).json({
-      message,
-      relevantData: {
-        teams: relevantData.teams || {},
-        matches: relevantData.matches || [],
-        queryContext: relevantData.queryContext || {},
-        teamsCount: Object.keys(relevantData.teams || {}).length,
-        matchesCount: (relevantData.matches || []).length
-      }
-    });
-  } catch (error) {
-    console.error("Error in test-rag endpoint:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
   console.log("Generating AI response with data:", {
     teamsCount: Object.keys(relevantData.teams || {}).length,
@@ -556,16 +339,5 @@ app.get('*', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] Server running on port ${PORT}`);
-  console.log(`[${timestamp}] Environment: ${process.env.NODE_ENV}`);
-  console.log(`[${timestamp}] Firestore DB available: ${!!db}`);
-  
-  // Log routes
-  console.log(`[${timestamp}] Available routes:`);
-  app._router.stack.forEach(r => {
-    if (r.route && r.route.path) {
-      console.log(`[${timestamp}] - ${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
-    }
-  });
+  console.log(`Server running on port ${PORT}`);
 });
