@@ -53,204 +53,209 @@ function determineQueryIntent(query) {
 }
 
 // Main function to retrieve relevant data based on user query
-async function retrieveRelevantData(query, externalDb = null) {
-  console.log("=== RAG SYSTEM DETAILED DIAGNOSTICS ===");
-  console.log("Query:", query);
-  console.log("External DB provided:", !!externalDb);
-  console.log("Imported DB available:", !!db);
-  
-  // Use provided DB, imported DB, or fail
-  const firestoreDb = externalDb || db;
-  
-  // If we still don't have a DB, log the error and return fallback
-  if (!firestoreDb) {
-    console.error("CRITICAL: No Firestore database available");
-    return {
-      teams: {},
-      matches: [],
-      queryContext: { intent: "fallback" },
-      message: "Firestore database instance is unavailable"
-    };
-  }
-  
+async function retrieveRelevantData(userMessage, db) {
   try {
-    console.log("Using Firestore DB instance");
+    // Parse the user query to determine intent and extract key information
+    const { intent, teamNumbers, matchNumbers } = parseUserQuery(userMessage);
     
-    // Extract entities from query
-    const teamNumbers = extractTeamNumbers(query);
-    const matchNumbers = extractMatchNumbers(query);
-    console.log("Extracted team numbers:", teamNumbers);
-    console.log("Extracted match numbers:", matchNumbers);
+    console.log(`Query parsed with intent: ${intent}, teams: ${teamNumbers}, matches: ${matchNumbers}`);
     
-    // Determine query intent
-    const intent = determineQueryIntent(query);
-    console.log("Determined intent:", intent);
+    // Create the collection reference
+    const scoutingCollection = collection(db, "scoutingData");
     
-    // Set up empty result containers
-    let teamStats = {};
-    let matchData = [];
-    
-    console.log("Attempting to access scoutingData collection...");
-    const scoutingCollection = collection(firestoreDb, "scoutingData");
-    console.log("Collection reference created successfully");
-    
-    // Simple test query first
-    console.log("Testing collection with initial query...");
-    const testSnapshot = await getDocs(query(scoutingCollection, limit(1)));
-    console.log(`Test query returned ${testSnapshot.size} documents`);
-    
+    // Get all documents (we'll filter client-side for now)
     console.log("Querying Firestore for all scouting data...");
     const querySnapshot = await getDocs(scoutingCollection);
-    console.log(`QUERY RESULT: Found ${querySnapshot.size} documents in scoutingData`);
+    console.log(`Found ${querySnapshot.size} documents in scoutingData`);
     
-    // If we have data, log the first document to verify structure
-    if (querySnapshot.size > 0) {
-      const firstDoc = querySnapshot.docs[0].data();
-      console.log("SAMPLE DOCUMENT STRUCTURE:", JSON.stringify(firstDoc, null, 2));
-      
-      // Check if document has expected fields
-      console.log("Document has matchInfo?", !!firstDoc.matchInfo);
-      console.log("Document has scores?", !!firstDoc.scores);
-      
-      if (!firstDoc.matchInfo || !firstDoc.scores) {
-        console.warn("WARNING: Document is missing expected fields!");
-        console.warn("This might explain why processing is failing!");
-      }
-    } else {
-      console.warn("!!!! CRITICAL: No documents found in scoutingData collection !!!!");
-      console.warn("This is why your chatbot isn't getting any data!");
+    if (querySnapshot.empty) {
+      console.warn("No documents found in scoutingData collection!");
       return {
         teams: {},
         matches: [],
-        queryContext: { intent, teamNumbers, matchNumbers, note: "NO_DATA_FOUND" },
-        message: "No scouting data available"
+        queryContext: { 
+          intent, 
+          teamNumbers, 
+          matchNumbers,
+          note: "NO_DATA_FOUND"
+        }
       };
     }
     
-    console.log(`Processing ${querySnapshot.size} documents from scoutingData`);
-
-    try {
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        console.log(`Processing document ${doc.id}`);
-        
-        if (!data.matchInfo || !data.matchInfo.teamNumber) {
-          console.warn(`Document ${doc.id} has missing or invalid matchInfo`);
-          return; // Skip this document
-        }
-        
-        const teamNumber = data.matchInfo.teamNumber;
-        const match = {
-          id: doc.id,
-          matchInfo: data.matchInfo,
-          scores: data.scores || {},
-          autonomous: data.autonomous || {},
-          teleop: data.teleop || {},
-          endgame: data.endgame || {},
-          additional: data.additional || {},
-          timestamp: data.timestamp
-        };
-        
-        // Add to match data
-        matchData.push(match);
-        
-        // Initialize team stats if needed
-        if (!teamStats[teamNumber]) {
-          teamStats[teamNumber] = {
-            teamNumber,
-            matches: [],
-            averageScore: 0,
-            autoPerformance: 0,
-            teleopPerformance: 0,
-            endgamePerformance: 0,
-            climbSuccess: 0,
-            defensiveRating: 0
-          };
-        }
-        
-        teamStats[teamNumber].matches.push(match);
-      });
-      
-      console.log(`Successfully processed all documents. Team count: ${Object.keys(teamStats).length}`);
-    } catch (processError) {
-      console.error("Error processing documents:", processError);
-      console.error("Error stack:", processError.stack);
-      // Continue with what we've got so far
-    }
+    // Process the documents into team statistics
+    let teamStats = {};
+    let matchData = [];
     
-    // Filter for specific teams if requested
-    if (teamNumbers.length > 0) {
-      const filteredTeamStats = {};
-      teamNumbers.forEach(team => {
-        if (teamStats[team]) {
-          filteredTeamStats[team] = teamStats[team];
-        }
-      });
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
       
-      // If we found any of the requested teams, use those
-      if (Object.keys(filteredTeamStats).length > 0) {
-        teamStats = filteredTeamStats;
+      if (!data.matchInfo || !data.matchInfo.teamNumber) {
+        console.warn(`Document ${doc.id} has invalid structure`);
+        return; // Skip this document
       }
-    }
-    
-    // Calculate averages for each team
-    Object.keys(teamStats).forEach((teamNumber) => {
-      const stats = teamStats[teamNumber];
-      const matchCount = stats.matches.length;
       
-      if (matchCount > 0) {
-        const totalScore = stats.matches.reduce((sum, match) => sum + (match.scores?.totalPoints || 0), 0);
-        stats.averageScore = totalScore / matchCount;
-        
-        const autoScore = stats.matches.reduce((sum, match) => sum + (match.scores?.autoPoints || 0), 0);
-        stats.autoPerformance = autoScore / matchCount;
-        
-        const teleopScore = stats.matches.reduce((sum, match) => sum + (match.scores?.teleopPoints || 0), 0);
-        stats.teleopPerformance = teleopScore / matchCount;
-        
-        const endgameScore = stats.matches.reduce((sum, match) => sum + (match.scores?.bargePoints || 0), 0);
-        stats.endgamePerformance = endgameScore / matchCount;
-        
-        const climbSuccesses = stats.matches.filter(match => 
-          match.endgame?.shallowCageClimb || match.endgame?.deepCageClimb
-        ).length;
-        stats.climbSuccess = climbSuccesses / matchCount;
-        
-        const defenseRatings = stats.matches
-          .filter(match => match.additional?.playedDefense)
-          .map(match => match.additional?.defenseRating || 0);
-        
-        stats.defensiveRating = defenseRatings.length > 0 
-          ? defenseRatings.reduce((sum, rating) => sum + rating, 0) / defenseRatings.length 
-          : 0;
+      const teamNumber = data.matchInfo.teamNumber;
+      const match = {
+        id: doc.id,
+        matchInfo: data.matchInfo,
+        scores: data.scores || {},
+        autonomous: data.autonomous || {},
+        teleop: data.teleop || {},
+        endgame: data.endgame || {},
+        additional: data.additional || {},
+        timestamp: data.timestamp
+      };
+      
+      // Add to match data
+      matchData.push(match);
+      
+      // Initialize team stats if needed
+      if (!teamStats[teamNumber]) {
+        teamStats[teamNumber] = {
+          teamNumber,
+          matches: [],
+          totalScore: 0,
+          matchCount: 0,
+          averageScore: 0
+        };
+      }
+      
+      // Add match to team's matches
+      teamStats[teamNumber].matches.push(match);
+      teamStats[teamNumber].matchCount++;
+      
+      // Update score metrics if available
+      if (data.scores && typeof data.scores.totalPoints === 'number') {
+        teamStats[teamNumber].totalScore += data.scores.totalPoints;
       }
     });
     
-    console.log("Retrieved team stats for teams:", Object.keys(teamStats));
-    console.log("Retrieved match data count:", matchData.length);
+    // Calculate average scores and other metrics
+    Object.values(teamStats).forEach(team => {
+      team.averageScore = team.totalScore / team.matchCount;
+      
+      // Add other metrics as needed
+      // Calculate auto performance if available
+      let autoTotal = 0;
+      let teleopTotal = 0;
+      let endgameTotal = 0;
+      let climbSuccesses = 0;
+      let defenseRatingTotal = 0;
+      let defenseRatingCount = 0;
+      
+      team.matches.forEach(match => {
+        if (match.scores && typeof match.scores.autoPoints === 'number') {
+          autoTotal += match.scores.autoPoints;
+        }
+        
+        if (match.scores && typeof match.scores.teleopPoints === 'number') {
+          teleopTotal += match.scores.teleopPoints;
+        }
+        
+        if (match.scores && typeof match.scores.bargePoints === 'number') {
+          endgameTotal += match.scores.bargePoints;
+        }
+        
+        // Check endgame status for climb
+        if (match.endgame && (match.endgame.shallowCageClimb || match.endgame.deepCageClimb)) {
+          climbSuccesses++;
+        }
+        
+        // Add defense rating if available
+        if (match.additional && typeof match.additional.defenseRating === 'number') {
+          defenseRatingTotal += match.additional.defenseRating;
+          defenseRatingCount++;
+        }
+      });
+      
+      // Only add these metrics if we have data
+      if (team.matchCount > 0) {
+        team.autoPerformance = autoTotal / team.matchCount;
+        team.teleopPerformance = teleopTotal / team.matchCount;
+        team.endgamePerformance = endgameTotal / team.matchCount;
+        team.climbSuccess = climbSuccesses / team.matchCount;
+      }
+      
+      if (defenseRatingCount > 0) {
+        team.defensiveRating = defenseRatingTotal / defenseRatingCount;
+      }
+    });
     
-    // Return the relevant data
+    // Filter teams and matches based on intent and query
+    let relevantTeams = teamStats;
+    let relevantMatches = matchData;
+    
+    // If specific teams were mentioned, filter to just those teams
+    if (teamNumbers.length > 0) {
+      relevantTeams = {};
+      teamNumbers.forEach(teamNum => {
+        if (teamStats[teamNum]) {
+          relevantTeams[teamNum] = teamStats[teamNum];
+        }
+      });
+    }
+    
+    // Return the processed data
     return {
-      teams: teamStats,
-      matches: matchData,
+      teams: relevantTeams,
+      matches: relevantMatches,
       queryContext: { intent, teamNumbers, matchNumbers }
     };
-    
   } catch (error) {
-    console.error("Error in retrieveRelevantData:", error);
-    console.error("Error stack:", error.stack);
+    console.error("Error retrieving relevant data:", error);
     return {
       teams: {},
       matches: [],
       queryContext: { 
         intent: "error", 
         errorDetails: error.message,
-        errorType: error.name,
+        errorType: error.constructor.name,
         errorAt: new Date().toISOString()
-      },
-      message: "Error retrieving data: " + error.message
+      }
     };
   }
+}
+
+// Simple query parsing function
+function parseUserQuery(message) {
+  // Default values
+  let intent = "team_performance";
+  let teamNumbers = [];
+  let matchNumbers = [];
+  
+  // Convert to lowercase for easier matching
+  const lowerMessage = message.toLowerCase();
+  
+  // Check for team numbers - common patterns like "team 254" or "#254"
+  const teamRegex = /team\s+(\d+)|#(\d+)/g;
+  let teamMatch;
+  
+  while ((teamMatch = teamRegex.exec(lowerMessage)) !== null) {
+    const teamNum = teamMatch[1] || teamMatch[2];
+    teamNumbers.push(teamNum);
+  }
+  
+  // Check for match numbers - patterns like "match 5" or "qualifying 5"
+  const matchRegex = /match\s+(\d+)|qualifying\s+(\d+)|qual\s+(\d+)|q(\d+)/g;
+  let matchMatch;
+  
+  while ((matchMatch = matchRegex.exec(lowerMessage)) !== null) {
+    const matchNum = matchMatch[1] || matchMatch[2] || matchMatch[3] || matchMatch[4];
+    matchNumbers.push(matchNum);
+  }
+  
+  // Determine intent based on keywords
+  if (lowerMessage.includes("match") || lowerMessage.includes("qualifying") || matchNumbers.length > 0) {
+    intent = "match_analysis";
+  } else if (lowerMessage.includes("compare") || lowerMessage.includes("vs") || lowerMessage.includes("versus")) {
+    intent = "team_comparison";
+  } else if (lowerMessage.includes("rank") || lowerMessage.includes("best") || lowerMessage.includes("top")) {
+    intent = "team_ranking";
+  } else if (teamNumbers.length > 0) {
+    intent = "team_performance";
+  }
+  
+  return { intent, teamNumbers, matchNumbers };
 }
 
 // Function to get top defensive teams
