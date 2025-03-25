@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import TeamStats from './TeamStats';
 import MatchTable from './MatchTable';
-import { app } from '../firebase.config.js';
+import { db } from '../firebase.client.js';
 
 function DataAnalysis() {
   const [scoutingData, setScoutingData] = useState([]);
@@ -16,7 +16,6 @@ function DataAnalysis() {
     const fetchData = async () => {
       try {
         console.log("Fetching data from Firestore...");
-        const db = getFirestore(app);
         
         // Make sure this collection name matches what you use in ScoutingForm.js
         const querySnapshot = await getDocs(collection(db, "scoutingData"));
