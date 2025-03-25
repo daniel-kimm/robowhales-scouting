@@ -7,7 +7,8 @@ function ScoutingForm() {
     matchInfo: {
       matchNumber: '',
       teamNumber: '',
-      alliance: 'red'
+      alliance: 'red',
+      scouterInitials: ''
     },
     autonomous: {
       mobility: false,
@@ -192,7 +193,8 @@ function ScoutingForm() {
       matchInfo: {
         matchNumber: '',
         teamNumber: '',
-        alliance: 'red'
+        alliance: 'red',
+        scouterInitials: ''
       },
       autonomous: {
         mobility: false,
@@ -312,6 +314,18 @@ function ScoutingForm() {
               <option value="red">Red</option>
               <option value="blue">Blue</option>
             </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="scouterInitials">Scouter Initials:</label>
+            <input 
+              type="text" 
+              id="scouterInitials" 
+              value={formData.matchInfo.scouterInitials}
+              onChange={(e) => handleInputChange('matchInfo', 'scouterInitials', e.target.value)}
+              maxLength="3"
+              placeholder="Your initials"
+              required
+            />
           </div>
         </div>
         

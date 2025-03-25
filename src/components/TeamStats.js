@@ -103,7 +103,8 @@ function TeamStats({ matches }) {
       .filter(match => match.additional?.notes)
       .map(match => ({
         matchNumber: match.matchInfo?.matchNumber || 'Unknown Match',
-        notes: match.additional?.notes
+        notes: match.additional?.notes,
+        scouterInitials: match.matchInfo?.scouterInitials || 'Unknown'
       }));
     
     return {
@@ -549,6 +550,7 @@ function TeamStats({ matches }) {
                         <div key={index} className="note-item">
                           <div className="note-match"><strong>Match {note.matchNumber}:</strong></div>
                           <div className="note-text">{note.notes}</div>
+                          <div className="note-scouter">Scouted by: {note.scouterInitials}</div>
                         </div>
                       ))}
                     </div>
