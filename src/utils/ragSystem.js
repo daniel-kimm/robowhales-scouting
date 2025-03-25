@@ -215,7 +215,12 @@ async function retrieveRelevantData(query, externalDb = null) {
     return {
       teams: {},
       matches: [],
-      queryContext: { intent: "fallback" },
+      queryContext: { 
+        intent: "error", 
+        errorDetails: error.message,
+        errorType: error.name,
+        errorAt: new Date().toISOString()
+      },
       message: "Error retrieving data: " + error.message
     };
   }

@@ -7,6 +7,7 @@ const fs = require('fs');
 const { db } = require('./src/firebase.config');
 const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
 const { retrieveRelevantData } = require('./src/utils/ragSystem');
+const { listAllCollections, getAllDocuments } = require('./src/firebase.admin');
 
 // Initialize Express
 const app = express();
@@ -116,15 +117,54 @@ app.get('/api/check-collections', async (req, res) => {
   try {
     const { collection, getDocs } = require('firebase/firestore');
     console.log("Checking collections...");
-    const scoutingCollection = collection(db, "scoutingData");
-    const snapshot = await getDocs(scoutingCollection);
-    res.status(200).json({ 
-      collection: "scoutingData", 
-      documentCount: snapshot.size,
-      sample: snapshot.size > 0 ? snapshot.docs[0].data() : null
-    });
+    const possibleCollections = [
+      "scoutingData",
+      "scouting_data",
+      "ScoutingData", 
+      "matches",
+      "teams",
+      "events",
+      "users"
+    ];
+    
+    const results = {};
+    
+    for (const collName of possibleCollections) {
+      try {
+        const collRef = collection(db, collName);
+        const snapshot = await getDocs(collRef);
+        results[collName] = {
+          exists: true,
+          count: snapshot.size,
+          sample: snapshot.size > 0 ? snapshot.docs[0].data() : null
+        };
+      } catch (err) {
+        results[collName] = { exists: false, error: err.message };
+      }
+    }
+    
+    res.status(200).json(results);
   } catch (error) {
     console.error("Error checking collections:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add admin route for debugging
+app.get('/api/admin/collections', async (req, res) => {
+  try {
+    const result = await listAllCollections();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/collection/:name', async (req, res) => {
+  try {
+    const result = await getAllDocuments(req.params.name);
+    res.status(200).json(result);
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
