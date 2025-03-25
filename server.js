@@ -373,6 +373,37 @@ app.get('/api/rag-diagnostics', async (req, res) => {
   }
 });
 
+// Add a test RAG endpoint
+app.post('/api/test-rag', async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    console.log("Testing RAG system with message:", message);
+    
+    // Get relevant data
+    const relevantData = await retrieveRelevantData(message, db);
+    
+    // Return the full data for analysis
+    return res.status(200).json({
+      message,
+      relevantData: {
+        teams: relevantData.teams || {},
+        matches: relevantData.matches || [],
+        queryContext: relevantData.queryContext || {},
+        teamsCount: Object.keys(relevantData.teams || {}).length,
+        matchesCount: (relevantData.matches || []).length
+      }
+    });
+  } catch (error) {
+    console.error("Error in test-rag endpoint:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 async function generateAIResponse(message, relevantData, conversationHistory = []) {
   console.log("Generating AI response with data:", {
     teamsCount: Object.keys(relevantData.teams || {}).length,
@@ -391,12 +422,25 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       formattedData += `Team ${team.teamNumber}:\n`;
       formattedData += `- Matches played: ${team.matches.length}\n`;
       formattedData += `- Average total score: ${team.averageScore.toFixed(1)} points\n`;
-      formattedData += `- Average auto score: ${team.autoPerformance.toFixed(1)} points\n`;
-      formattedData += `- Average teleop score: ${team.teleopPerformance.toFixed(1)} points\n`;
-      formattedData += `- Average endgame score: ${team.endgamePerformance.toFixed(1)} points\n`;
-      formattedData += `- Climb success rate: ${(team.climbSuccess * 100).toFixed(1)}%\n`;
       
-      if (team.defensiveRating > 0) {
+      // Only include these if they exist
+      if (typeof team.autoPerformance === 'number') {
+        formattedData += `- Average auto score: ${team.autoPerformance.toFixed(1)} points\n`;
+      }
+      
+      if (typeof team.teleopPerformance === 'number') {
+        formattedData += `- Average teleop score: ${team.teleopPerformance.toFixed(1)} points\n`;
+      }
+      
+      if (typeof team.endgamePerformance === 'number') {
+        formattedData += `- Average endgame score: ${team.endgamePerformance.toFixed(1)} points\n`;
+      }
+      
+      if (typeof team.climbSuccess === 'number') {
+        formattedData += `- Climb success rate: ${(team.climbSuccess * 100).toFixed(1)}%\n`;
+      }
+      
+      if (typeof team.defensiveRating === 'number' && team.defensiveRating > 0) {
         formattedData += `- Defensive rating: ${team.defensiveRating.toFixed(1)}/10\n`;
       }
       
@@ -410,10 +454,22 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     
     relevantData.matches.forEach(match => {
       formattedData += `Match ${match.matchInfo?.matchNumber || 'unknown'} - Team ${match.matchInfo?.teamNumber || 'unknown'} (${match.matchInfo?.alliance || 'unknown'}):\n`;
-      formattedData += `- Total score: ${match.scores?.totalPoints || 0} points\n`;
-      formattedData += `- Auto: ${match.scores?.autoPoints || 0} points\n`;
-      formattedData += `- Teleop: ${match.scores?.teleopPoints || 0} points\n`;
-      formattedData += `- Endgame: ${match.scores?.bargePoints || 0} points\n`;
+      
+      if (match.scores && typeof match.scores.totalPoints === 'number') {
+        formattedData += `- Total score: ${match.scores.totalPoints} points\n`;
+      }
+      
+      if (match.scores && typeof match.scores.autoPoints === 'number') {
+        formattedData += `- Auto: ${match.scores.autoPoints} points\n`;
+      }
+      
+      if (match.scores && typeof match.scores.teleopPoints === 'number') {
+        formattedData += `- Teleop: ${match.scores.teleopPoints} points\n`;
+      }
+      
+      if (match.scores && typeof match.scores.bargePoints === 'number') {
+        formattedData += `- Endgame: ${match.scores.bargePoints} points\n`;
+      }
       
       if (match.additional?.notes) {
         formattedData += `- Notes: ${match.additional.notes}\n`;
@@ -442,6 +498,8 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     ${formattedData}
   `;
   
+  console.log("SYSTEM PROMPT:", systemPrompt);
+  
   // Format conversation history
   const formattedHistory = conversationHistory.map(msg => ({
     role: msg.role,
@@ -458,7 +516,7 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
   try {
     if (!openai) {
       console.log("OpenAI API not initialized, returning mock response");
-      return `This is a test response with the following data: Teams: ${Object.keys(relevantData.teams || {}).join(', ')}. Your message: ${message}`;
+      return `I found the following team data: ${Object.keys(relevantData.teams || {}).join(', ')}. The RAG system processed ${Object.keys(relevantData.teams || {}).length} teams from ${(relevantData.matches || []).length} matches.`;
     }
     
     const response = await openai.createChatCompletion({
