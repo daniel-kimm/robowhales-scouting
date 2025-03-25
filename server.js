@@ -332,16 +332,19 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
   }
 }
 
-// Make sure this catch-all route is AFTER all your API routes but BEFORE any 404 handlers
+// This catch-all route must be AFTER all API routes
+// It will handle all non-API routes and serve the React app
 app.get('*', (req, res) => {
-  // Skip API routes - they should have already been handled by now
+  // Only skip API routes if they haven't been handled already
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
-  // Serve the index.html for all other routes
+  // For all other routes, serve the React app
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
+
+// No other routes should come after the catch-all
 
 // Start the server
 app.listen(PORT, () => {
