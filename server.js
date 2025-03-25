@@ -285,8 +285,8 @@ When answering:
 - If no data is available for a specific team or match, clearly state this limitation.
 - Keep your analysis concise but informative, focused on the question asked.`;
 
-    // Send the request to OpenAI
-    const response = await openai.chat.completions.create({
+    // Fixed: Use the correct OpenAI API call syntax
+    const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: systemPrompt },
@@ -297,7 +297,7 @@ When answering:
       max_tokens: 800
     });
     
-    return response.data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+    return response.data.choices[0].message.content || "Sorry, I couldn't generate a response.";
   } catch (error) {
     console.error("Error generating AI response:", error);
     return "Sorry, there was an error generating a response. Please try again.";
