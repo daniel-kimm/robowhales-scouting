@@ -62,7 +62,7 @@ app.post('/api/chat', async (req, res) => {
     return res.status(200).json({ 
       response: aiResponse,
       context: {
-        teamsAnalyzed: Object.keys(relevantData.teams || {}),
+        teamsAnalyzed: Object.keys(relevantData.teams || {}).length,
         matchesAnalyzed: (relevantData.matches || []).map(m => m.matchInfo?.matchNumber).filter(Boolean),
         intent: relevantData.queryContext?.intent
       }
@@ -145,6 +145,76 @@ app.get('/api/check-collections', async (req, res) => {
     res.status(200).json(results);
   } catch (error) {
     console.error("Error checking collections:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update the diagnose-collections endpoint
+app.get('/api/diagnose-collections', async (req, res) => {
+  try {
+    console.log("Running collection diagnostics...");
+    
+    // Initialize Firebase directly in this function
+    const { initializeApp } = require('firebase/app');
+    const { getFirestore, collection, getDocs } = require('firebase/firestore');
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFVw_VDzuIJWWGv9iW70lyxJdtWgIspio",
+      authDomain: "robowhales-scouting.firebaseapp.com",
+      projectId: "robowhales-scouting",
+      storageBucket: "robowhales-scouting.firebasestorage.app",
+      messagingSenderId: "94724192757",
+      appId: "1:94724192757:web:270a356595fdddc54b08bc",
+      measurementId: "G-RW32SXHSRX"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // Check all potential collection names
+    const collections = [
+      "scoutingData",
+      "scouting_data",
+      "ScoutingData",
+      "Matches",
+      "matches",
+      "Teams",
+      "teams",
+      "Events",
+      "events",
+      "users"
+    ];
+    
+    const results = {};
+    
+    for (const collName of collections) {
+      try {
+        const collRef = collection(db, collName);
+        const snapshot = await getDocs(collRef);
+        
+        results[collName] = {
+          exists: true,
+          count: snapshot.size
+        };
+        
+        if (snapshot.size > 0) {
+          // Get sample document
+          const doc = snapshot.docs[0];
+          results[collName].sampleDocId = doc.id;
+          results[collName].sampleData = doc.data();
+        }
+      } catch (error) {
+        results[collName] = {
+          exists: false,
+          error: error.message
+        };
+      }
+    }
+    
+    // Return the results in the response
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error running diagnostics:", error);
     res.status(500).json({ error: error.message });
   }
 });

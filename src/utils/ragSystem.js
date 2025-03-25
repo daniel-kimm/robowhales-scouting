@@ -101,13 +101,28 @@ async function retrieveRelevantData(query, externalDb = null) {
     
     console.log("Querying Firestore for all scouting data...");
     const querySnapshot = await getDocs(scoutingCollection);
+    console.log(`QUERY RESULT: Found ${querySnapshot.size} documents in scoutingData`);
     
-    if (querySnapshot.empty) {
-      console.warn("No documents found in scoutingData collection");
+    // If we have data, log the first document to verify structure
+    if (querySnapshot.size > 0) {
+      const firstDoc = querySnapshot.docs[0].data();
+      console.log("SAMPLE DOCUMENT STRUCTURE:", JSON.stringify(firstDoc, null, 2));
+      
+      // Check if document has expected fields
+      console.log("Document has matchInfo?", !!firstDoc.matchInfo);
+      console.log("Document has scores?", !!firstDoc.scores);
+      
+      if (!firstDoc.matchInfo || !firstDoc.scores) {
+        console.warn("WARNING: Document is missing expected fields!");
+        console.warn("This might explain why processing is failing!");
+      }
+    } else {
+      console.warn("!!!! CRITICAL: No documents found in scoutingData collection !!!!");
+      console.warn("This is why your chatbot isn't getting any data!");
       return {
         teams: {},
         matches: [],
-        queryContext: { intent, teamNumbers, matchNumbers },
+        queryContext: { intent, teamNumbers, matchNumbers, note: "NO_DATA_FOUND" },
         message: "No scouting data available"
       };
     }
