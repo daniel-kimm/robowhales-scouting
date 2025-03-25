@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import TeamStats from './TeamStats';
 import MatchTable from './MatchTable';
-import { app } from '../firebase.config';
+import { app } from '../firebase.config.js';
 
 function DataAnalysis() {
   const [scoutingData, setScoutingData] = useState([]);
