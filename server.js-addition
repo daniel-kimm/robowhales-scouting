@@ -1,0 +1,13 @@
+// Add collection diagnostics endpoint
+const { runCollectionDiagnostics } = require('./src/check-collections');
+
+app.get('/api/diagnose-collections', async (req, res) => {
+  try {
+    console.log("Running collection diagnostics...");
+    await runCollectionDiagnostics();
+    res.status(200).send("Diagnostics complete - check server logs");
+  } catch (error) {
+    console.error("Error running diagnostics:", error);
+    res.status(500).json({ error: error.message });
+  }
+}); 
