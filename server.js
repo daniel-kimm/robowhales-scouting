@@ -410,7 +410,6 @@ app.listen(PORT, () => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] Server running on port ${PORT}`);
   console.log(`[${timestamp}] Environment: ${process.env.NODE_ENV}`);
-  console.log(`[${timestamp}] Firebase config loaded: ${!!firebaseConfig}`);
   console.log(`[${timestamp}] Firestore DB available: ${!!db}`);
   
   // Log routes
