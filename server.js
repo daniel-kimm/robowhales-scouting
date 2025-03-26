@@ -313,7 +313,7 @@ IMPORTANT INSTRUCTIONS:
 
     // Fixed: Use the correct OpenAI API call syntax
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         ...conversationHistory.map(msg => ({ role: msg.role, content: msg.content })),
