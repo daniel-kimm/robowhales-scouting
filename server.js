@@ -6,7 +6,15 @@ require('dotenv').config();
 const fs = require('fs');
 const { db } = require('./src/firebase.config');
 const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
-const { retrieveRelevantData, extractTeamNumbers, extractMatchNumbers, getTopDefensiveTeams } = require('./src/utils/ragSystem');
+const { 
+  retrieveRelevantData, 
+  extractTeamNumbers, 
+  extractMatchNumbers, 
+  getTopDefensiveTeams,
+  getTopTeamsByMetric,
+  getTopCoralScoringTeams,
+  getTopAlgaeScoringTeams 
+} = require('./src/utils/ragSystem');
 
 // Initialize Express
 const app = express();
@@ -208,17 +216,88 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     // Format the relevant data for prompting
     let formattedData = "";
     
-    // Check if the query is about defensive teams
+    // Check query type to determine rankings to include
     const queryLower = message.toLowerCase();
+    
+    // Check for defensive team questions
     if (queryLower.includes('defensive') || queryLower.includes('defense') || 
         queryLower.includes('best defensive') || queryLower.includes('top defensive')) {
       
       // Get the top defensive teams
-      const topDefensiveTeams = getTopDefensiveTeams(relevantData.teams, 10);  // Get top 10 to ensure we include all
+      const topDefensiveTeams = getTopDefensiveTeams(relevantData.teams, 10);
       
-      formattedData += "### Top Defensive Teams\n\n";
+      formattedData += "### Top Defensive Teams (Ranked)\n\n";
       topDefensiveTeams.forEach((team, index) => {
         formattedData += `${index + 1}. Team ${team.teamNumber}: Defense Rating ${team.defensiveRating.toFixed(1)}/10 (${team.matchCount} matches)\n`;
+      });
+      formattedData += "\n";
+    }
+    
+    // Check for questions about coral scoring
+    if (queryLower.includes('coral') || queryLower.includes('level 4') || 
+        queryLower.includes('level 3') || queryLower.includes('level 2') || 
+        queryLower.includes('level 1')) {
+      
+      // Determine which level is being asked about
+      let level = null;
+      if (queryLower.includes('level 4')) level = 4;
+      else if (queryLower.includes('level 3')) level = 3;
+      else if (queryLower.includes('level 2')) level = 2;
+      else if (queryLower.includes('level 1')) level = 1;
+      
+      // Get teams ranked by the specific coral level or total coral
+      const coralTeams = getTopCoralScoringTeams(relevantData.teams, level, 10);
+      
+      formattedData += level ? 
+        `### Top Teams for Level ${level} Coral Scoring (Ranked)\n\n` : 
+        "### Top Teams for Overall Coral Scoring (Ranked)\n\n";
+      
+      coralTeams.forEach((team, index) => {
+        formattedData += `${index + 1}. Team ${team.teamNumber}: `;
+        
+        if (level) {
+          formattedData += `Avg. Level ${level} Coral: ${team.metricValue.toFixed(1)} pieces`;
+          formattedData += ` (Total Coral: ${team.stats.avgTotalCoral.toFixed(1)} pieces per match)\n`;
+        } else {
+          formattedData += `Avg. Total Coral: ${team.metricValue.toFixed(1)} pieces per match\n`;
+          // Include breakdown by level
+          formattedData += `   Level 1: ${team.stats.avgCoralLevel1.toFixed(1)}, `;
+          formattedData += `Level 2: ${team.stats.avgCoralLevel2.toFixed(1)}, `;
+          formattedData += `Level 3: ${team.stats.avgCoralLevel3.toFixed(1)}, `;
+          formattedData += `Level 4: ${team.stats.avgCoralLevel4.toFixed(1)}\n`;
+        }
+      });
+      formattedData += "\n";
+    }
+    
+    // Check for questions about algae scoring
+    if (queryLower.includes('algae') || queryLower.includes('processor') || 
+        queryLower.includes('net')) {
+      
+      // Determine which location is being asked about
+      let location = null;
+      if (queryLower.includes('processor')) location = 'processor';
+      else if (queryLower.includes('net')) location = 'net';
+      
+      // Get teams ranked by the specific algae location or total algae
+      const algaeTeams = getTopAlgaeScoringTeams(relevantData.teams, location, 10);
+      
+      formattedData += location ? 
+        `### Top Teams for Algae ${location.charAt(0).toUpperCase() + location.slice(1)} Scoring (Ranked)\n\n` : 
+        "### Top Teams for Overall Algae Scoring (Ranked)\n\n";
+      
+      algaeTeams.forEach((team, index) => {
+        formattedData += `${index + 1}. Team ${team.teamNumber}: `;
+        
+        if (location) {
+          formattedData += `Avg. Algae ${location.charAt(0).toUpperCase() + location.slice(1)}: ${team.metricValue.toFixed(1)} pieces`;
+          formattedData += ` (Total Algae: ${team.stats.avgTotalAlgae.toFixed(1)} pieces per match)\n`;
+        } else {
+          formattedData += `Avg. Total Algae: ${team.metricValue.toFixed(1)} pieces per match\n`;
+          // Include breakdown by location
+          formattedData += `   Processor: ${team.stats.avgAlgaeProcessor.toFixed(1)}, `;
+          formattedData += `Net: ${team.stats.avgAlgaeNet.toFixed(1)}\n`;
+        }
       });
       formattedData += "\n";
     }
@@ -399,30 +478,22 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       formattedData += "\n";
     }
     
-    // Update the system prompt to clarify the rating scales
+    // Update the system prompt
     let systemPrompt = `You are a helpful FRC (FIRST Robotics Competition) scouting assistant. You help teams analyze match data and provide insights based on scouting information.
 
 For the given query, provide a detailed analysis based on the data provided below. This data is factual and accurate - rely on it completely for your answer.
 
-Important notes about the data:
-- Defense Rating, Robot Speed, and Driver Skill are all rated on a scale of 1-10 (higher is better)
-- Coral can be scored in levels 1-4, with higher levels worth more points
-- Algae can be scored in either the Processor or Net
+IMPORTANT: When pre-ranked data is provided at the beginning of the information, USE THAT RANKING ORDER in your response. Do not reorder or recalculate rankings yourself.
 
 ${formattedData}
 
 IMPORTANT INSTRUCTIONS:
+- When ranked data is provided (like "Top Teams for X"), maintain the exact same ranking order in your response.
 - When asked about a team's "best game" or "best match", ALWAYS reference the match explicitly labeled as [BEST MATCH] in the data.
 - Double-check your numbers against the data provided to ensure accuracy.
 - If the user asks about a "best match", focus your response primarily on the match labeled as [BEST MATCH].
 - If specific match numbers are mentioned, focus on those match details.
 - If no data is available for a specific team or match, clearly state this limitation.
-- Keep your analysis concise but informative, focused on the question asked.
-
-When answering:
-- If asked about top defensive teams, show the teams in descending order of defensive rating, including all teams with a rating.
-- Make sure to include Team 9032 if it has a defensive rating above 0.
-- If specific ratings seem incorrect or missing, please indicate that in your response.
 - Keep your analysis concise but informative, focused on the question asked.`;
 
     // Fixed: Use the correct OpenAI API call syntax
