@@ -231,6 +231,42 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
           formattedData += `- Average Endgame: ${stats.endgamePerformance.toFixed(1)} points\n`;
         }
         
+        // Add existing metrics
+        if (stats.defensiveRating !== undefined) {
+          formattedData += `- Defense Rating: ${stats.defensiveRating.toFixed(1)}/5\n`;
+        }
+        
+        if (stats.robotSpeedRating !== undefined) {
+          formattedData += `- Robot Speed Rating: ${stats.robotSpeedRating.toFixed(1)}/5\n`;
+        }
+        
+        if (stats.driverSkillRating !== undefined) {
+          formattedData += `- Driver Skill Rating: ${stats.driverSkillRating.toFixed(1)}/5\n`;
+        }
+        
+        if (stats.climbSuccess !== undefined) {
+          formattedData += `- Climb Success Rate: ${(stats.climbSuccess * 100).toFixed(1)}%\n`;
+        }
+        
+        // Add detailed coral scoring metrics
+        formattedData += `\n##### Game Piece Scoring:\n`;
+        
+        // Coral scoring breakdown
+        if (stats.avgTotalCoral !== undefined) {
+          formattedData += `- Avg. Coral Pieces: ${stats.avgTotalCoral.toFixed(1)} per match\n`;
+          formattedData += `  - Level 1: ${stats.avgCoralLevel1.toFixed(1)}\n`;
+          formattedData += `  - Level 2: ${stats.avgCoralLevel2.toFixed(1)}\n`;
+          formattedData += `  - Level 3: ${stats.avgCoralLevel3.toFixed(1)}\n`;
+          formattedData += `  - Level 4: ${stats.avgCoralLevel4.toFixed(1)}\n`;
+        }
+        
+        // Algae scoring breakdown
+        if (stats.avgTotalAlgae !== undefined) {
+          formattedData += `- Avg. Algae Pieces: ${stats.avgTotalAlgae.toFixed(1)} per match\n`;
+          formattedData += `  - Processor: ${stats.avgAlgaeProcessor.toFixed(1)}\n`;
+          formattedData += `  - Net: ${stats.avgAlgaeNet.toFixed(1)}\n`;
+        }
+        
         formattedData += `- Match Count: ${stats.matchCount}\n\n`;
         
         // Important: Add individual match details
@@ -272,7 +308,59 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
             const isBestMatch = match.matchInfo.matchNumber === bestMatchesByTeam[teamNumber]?.matchNumber;
             const bestMatchMarker = isBestMatch ? " [BEST MATCH]" : "";
             
-            formattedData += `- Match ${match.matchInfo.matchNumber}${bestMatchMarker}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})\n`;
+            // Format the match line
+            let matchLine = `- Match ${match.matchInfo.matchNumber}${bestMatchMarker}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})`;
+            
+            // Add metrics if available for this match
+            if (match.additional?.defenseRating) {
+              matchLine += `, Defense: ${match.additional.defenseRating}/5`;
+            }
+            
+            if (match.additional?.robotSpeed) {
+              matchLine += `, Speed: ${match.additional.robotSpeed}/5`;
+            }
+            
+            if (match.additional?.driverSkill) {
+              matchLine += `, Driver: ${match.additional.driverSkill}/5`;
+            }
+            
+            formattedData += matchLine + '\n';
+            
+            // Add detailed scoring for this match
+            if (match.teleop) {
+              let scoringDetails = "  - Scored: ";
+              
+              // Coral scoring
+              const coralPieces = [];
+              if (typeof match.teleop.coralLevel1 === 'number' && match.teleop.coralLevel1 > 0) {
+                coralPieces.push(`${match.teleop.coralLevel1} coral in Level 1`);
+              }
+              if (typeof match.teleop.coralLevel2 === 'number' && match.teleop.coralLevel2 > 0) {
+                coralPieces.push(`${match.teleop.coralLevel2} coral in Level 2`);
+              }
+              if (typeof match.teleop.coralLevel3 === 'number' && match.teleop.coralLevel3 > 0) {
+                coralPieces.push(`${match.teleop.coralLevel3} coral in Level 3`);
+              }
+              if (typeof match.teleop.coralLevel4 === 'number' && match.teleop.coralLevel4 > 0) {
+                coralPieces.push(`${match.teleop.coralLevel4} coral in Level 4`);
+              }
+              
+              // Algae scoring
+              const algaePieces = [];
+              if (typeof match.teleop.algaeProcessor === 'number' && match.teleop.algaeProcessor > 0) {
+                algaePieces.push(`${match.teleop.algaeProcessor} algae in Processor`);
+              }
+              if (typeof match.teleop.algaeNet === 'number' && match.teleop.algaeNet > 0) {
+                algaePieces.push(`${match.teleop.algaeNet} algae in Net`);
+              }
+              
+              // Combine scoring details
+              const scoringItems = [...coralPieces, ...algaePieces];
+              if (scoringItems.length > 0) {
+                scoringDetails += scoringItems.join(', ');
+                formattedData += scoringDetails + '\n';
+              }
+            }
             
             // Add notes if available
             if (match.additional?.notes) {
