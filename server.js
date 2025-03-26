@@ -500,7 +500,7 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       formattedData += "\n";
     }
     
-    // Update the system prompt
+    // Update the system prompt with a clear guideline about only referencing teams in the data
     let systemPrompt = `You are a helpful FRC (FIRST Robotics Competition) scouting assistant. You help teams analyze match data and provide insights based on scouting information.
 
 For the given query, provide a detailed analysis based on the data provided below. This data is factual and accurate - rely on it completely for your answer.
@@ -510,13 +510,15 @@ IMPORTANT: When pre-ranked data is provided at the beginning of the information,
 ${formattedData}
 
 IMPORTANT INSTRUCTIONS:
+- ONLY reference and analyze teams that are specifically mentioned in the data provided. DO NOT mention or analyze teams that are not in this dataset.
 - When ranked data is provided (like "Top Teams for X"), maintain the exact same ranking order in your response.
 - When asked about a team's "best game" or "best match", ALWAYS reference the match explicitly labeled as [BEST MATCH] in the data.
 - Double-check your numbers against the data provided to ensure accuracy.
 - If the user asks about a "best match", focus your response primarily on the match labeled as [BEST MATCH].
 - If specific match numbers are mentioned, focus on those match details.
 - If no data is available for a specific team or match, clearly state this limitation.
-- Keep your analysis concise but informative, focused on the question asked.`;
+- Keep your analysis concise but informative, focused on the question asked.
+- If asked about a team not in the data, explicitly state "There is no data available for Team X" rather than making up information.`;
 
     // Fixed: Use the correct OpenAI API call syntax
     const response = await openai.createChatCompletion({
