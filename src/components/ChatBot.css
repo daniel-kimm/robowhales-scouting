@@ -35,7 +35,7 @@
   margin-bottom: 8px;
   word-wrap: break-word;
   display: inline-block;
-  line-height: 1.2;
+  line-height: 1.2 !important;
 }
 
 .message.user {
@@ -56,7 +56,7 @@
 
 .message-content {
   width: fit-content;
-  line-height: 1.2;
+  line-height: 1.2 !important;
 }
 
 .message-content br {
@@ -220,6 +220,29 @@
 .list-item,
 .list-item-bullet {
   padding-left: 20px;
-  margin: 0;
-  line-height: 1.2;
+  margin: 0 !important;
+  line-height: 1 !important;
+  display: block;
+}
+
+.list-item + .list-item,
+.list-item-bullet + .list-item-bullet {
+  margin-top: 0 !important;
+}
+
+br + .list-item,
+br + .list-item-bullet,
+.list-item + br,
+.list-item-bullet + br {
+  margin: 0 !important;
+  line-height: 0 !important;
+}
+
+.compact-break {
+  display: block;
+  content: "";
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 0.6em !important;
+  line-height: 0.6 !important;
 }
