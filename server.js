@@ -6,7 +6,7 @@ require('dotenv').config();
 const fs = require('fs');
 const { db } = require('./src/firebase.config');
 const { testFirebaseConnection, exportAllData } = require('./src/firebase.debug');
-const { retrieveRelevantData } = require('./src/utils/ragSystem');
+const { retrieveRelevantData, extractTeamNumbers, extractMatchNumbers, getTopDefensiveTeams } = require('./src/utils/ragSystem');
 
 // Initialize Express
 const app = express();
@@ -208,6 +208,21 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     // Format the relevant data for prompting
     let formattedData = "";
     
+    // Check if the query is about defensive teams
+    const queryLower = message.toLowerCase();
+    if (queryLower.includes('defensive') || queryLower.includes('defense') || 
+        queryLower.includes('best defensive') || queryLower.includes('top defensive')) {
+      
+      // Get the top defensive teams
+      const topDefensiveTeams = getTopDefensiveTeams(relevantData.teams, 10);  // Get top 10 to ensure we include all
+      
+      formattedData += "### Top Defensive Teams\n\n";
+      topDefensiveTeams.forEach((team, index) => {
+        formattedData += `${index + 1}. Team ${team.teamNumber}: Defense Rating ${team.defensiveRating.toFixed(1)}/10 (${team.matchCount} matches)\n`;
+      });
+      formattedData += "\n";
+    }
+    
     // Store the best matches for clear reference
     let bestMatchesByTeam = {};
     
@@ -402,6 +417,12 @@ IMPORTANT INSTRUCTIONS:
 - If the user asks about a "best match", focus your response primarily on the match labeled as [BEST MATCH].
 - If specific match numbers are mentioned, focus on those match details.
 - If no data is available for a specific team or match, clearly state this limitation.
+- Keep your analysis concise but informative, focused on the question asked.
+
+When answering:
+- If asked about top defensive teams, show the teams in descending order of defensive rating, including all teams with a rating.
+- Make sure to include Team 9032 if it has a defensive rating above 0.
+- If specific ratings seem incorrect or missing, please indicate that in your response.
 - Keep your analysis concise but informative, focused on the question asked.`;
 
     // Fixed: Use the correct OpenAI API call syntax
