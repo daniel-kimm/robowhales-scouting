@@ -208,6 +208,9 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     // Format the relevant data for prompting
     let formattedData = "";
     
+    // Store the best matches for clear reference
+    let bestMatchesByTeam = {};
+    
     // Team data formatter
     if (relevantData.teams && Object.keys(relevantData.teams).length > 0) {
       formattedData += "### Team Data\n\n";
@@ -232,7 +235,27 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
         
         // Important: Add individual match details
         if (stats.matches && stats.matches.length > 0) {
-          formattedData += "##### Individual Match Scores:\n";
+          // Find the best match first
+          const bestMatch = [...stats.matches].sort((a, b) => 
+            (b.scores?.totalPoints || 0) - (a.scores?.totalPoints || 0)
+          )[0];
+          
+          if (bestMatch) {
+            bestMatchesByTeam[teamNumber] = {
+              matchNumber: bestMatch.matchInfo.matchNumber,
+              totalPoints: bestMatch.scores?.totalPoints || 0,
+              autoPoints: bestMatch.scores?.autoPoints || 0,
+              teleopPoints: bestMatch.scores?.teleopPoints || 0,
+              endgamePoints: bestMatch.scores?.bargePoints || 0
+            };
+            
+            // Add best match summary at the top for emphasis
+            formattedData += `##### BEST MATCH FOR TEAM ${teamNumber}:\n`;
+            formattedData += `- Match ${bestMatch.matchInfo.matchNumber}: ${bestMatch.scores?.totalPoints || 0} total points\n`;
+            formattedData += `  - Auto: ${bestMatch.scores?.autoPoints || 0}, Teleop: ${bestMatch.scores?.teleopPoints || 0}, Endgame: ${bestMatch.scores?.bargePoints || 0}\n\n`;
+          }
+          
+          formattedData += "##### All Match Scores:\n";
           
           // Sort matches by match number
           const sortedMatches = [...stats.matches].sort((a, b) => 
@@ -245,7 +268,11 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
             const teleopPoints = match.scores?.teleopPoints || 0;
             const endgamePoints = match.scores?.bargePoints || 0;
             
-            formattedData += `- Match ${match.matchInfo.matchNumber}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})\n`;
+            // Mark the best match with an asterisk for clarity
+            const isBestMatch = match.matchInfo.matchNumber === bestMatchesByTeam[teamNumber]?.matchNumber;
+            const bestMatchMarker = isBestMatch ? " [BEST MATCH]" : "";
+            
+            formattedData += `- Match ${match.matchInfo.matchNumber}${bestMatchMarker}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})\n`;
             
             // Add notes if available
             if (match.additional?.notes) {
@@ -253,34 +280,33 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
             }
           });
           
-          // If this is a best_match intent, explicitly identify the best match
-          if (relevantData.queryContext?.intent === "best_match") {
-            const bestMatch = [...stats.matches].sort((a, b) => 
-              (b.scores?.totalPoints || 0) - (a.scores?.totalPoints || 0)
-            )[0];
-            
-            if (bestMatch) {
-              formattedData += `\n##### Best Match:\n`;
-              formattedData += `- Match ${bestMatch.matchInfo.matchNumber} was the highest scoring with ${bestMatch.scores?.totalPoints || 0} total points\n`;
-              formattedData += `  - Auto: ${bestMatch.scores?.autoPoints || 0}, Teleop: ${bestMatch.scores?.teleopPoints || 0}, Endgame: ${bestMatch.scores?.bargePoints || 0}\n`;
-            }
-          }
-          
           formattedData += "\n";
         }
       });
     }
     
-    // Create the prompt with instructions tailored to the query intent
+    // Add a summary of best matches for extra emphasis
+    if (Object.keys(bestMatchesByTeam).length > 0) {
+      formattedData += "### SUMMARY OF BEST MATCHES:\n\n";
+      
+      Object.entries(bestMatchesByTeam).forEach(([teamNumber, matchData]) => {
+        formattedData += `- Team ${teamNumber}'s best match: Match ${matchData.matchNumber} with ${matchData.totalPoints} points\n`;
+      });
+      
+      formattedData += "\n";
+    }
+    
+    // Create the prompt with stronger instructions about best matches
     let systemPrompt = `You are a helpful FRC (FIRST Robotics Competition) scouting assistant. You help teams analyze match data and provide insights based on scouting information.
 
-For the given query, provide a detailed analysis based on the data provided below. 
+For the given query, provide a detailed analysis based on the data provided below. This data is factual and accurate - rely on it completely for your answer.
 
 ${formattedData}
 
-When answering:
-- If asked about a team's "best game" or "best match", provide the specific match details (match number and score breakdown).
-- When discussing overall performance, include both averages AND the individual match that had the highest score.
+IMPORTANT INSTRUCTIONS:
+- When asked about a team's "best game" or "best match", ALWAYS reference the match explicitly labeled as [BEST MATCH] in the data.
+- Double-check your numbers against the data provided to ensure accuracy.
+- If the user asks about a "best match", focus your response primarily on the match labeled as [BEST MATCH].
 - If specific match numbers are mentioned, focus on those match details.
 - If no data is available for a specific team or match, clearly state this limitation.
 - Keep your analysis concise but informative, focused on the question asked.`;
@@ -293,7 +319,7 @@ When answering:
         ...conversationHistory.map(msg => ({ role: msg.role, content: msg.content })),
         { role: "user", content: message }
       ],
-      temperature: 0.7,
+      temperature: 0.5,  // Lower temperature for more consistent answers
       max_tokens: 800
     });
     
