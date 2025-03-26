@@ -27,25 +27,19 @@ function ChatBot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Format message content with minimal line spacing
+  // Simplify the formatMessage function to only handle headings
   const formatMessage = (content) => {
     if (!content) return '';
     
-    // Replace headers with styled elements
+    // Format just the headings with minimal styling
     content = content.replace(/### (.*?)(?:\n|$)/g, '<div class="message-heading-3">$1</div>');
     content = content.replace(/## (.*?)(?:\n|$)/g, '<div class="message-heading-2">$1</div>');
     content = content.replace(/# (.*?)(?:\n|$)/g, '<div class="message-heading-1">$1</div>');
     
-    // Format numbered lists with minimal spacing
-    content = content.replace(/(\d+\.\s+)([^\n]+)/g, '<div class="list-item">$1$2</div>');
+    // Convert line breaks to <br> tags
+    content = content.replace(/\n/g, '<br>');
     
-    // Format bullet points with minimal spacing
-    content = content.replace(/- (.*?)(?:\n|$)/g, '<div class="list-item-bullet">• $1</div>');
-    
-    // Convert line breaks to span tags for better control
-    content = content.replace(/\n/g, '<br class="compact-break">');
-    
-    // Remove asterisks completely
+    // Remove asterisks (keep this standard behavior)
     content = content.replace(/\*/g, '');
     
     return content;
