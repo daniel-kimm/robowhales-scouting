@@ -35,6 +35,7 @@
   margin-bottom: 8px;
   word-wrap: break-word;
   display: inline-block;
+  line-height: 1.2;
 }
 
 .message.user {
@@ -55,13 +56,15 @@
 
 .message-content {
   width: fit-content;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
 .message-content br {
   display: block;
   content: "";
-  margin-top: 3px;
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1;
 }
 
 .input-form {
@@ -189,11 +192,17 @@
   color: #333;
 }
 
+.message-heading-1,
+.message-heading-2,
+.message-heading-3 {
+  margin-top: 4px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
 .message-heading-1 {
   font-size: 1.3em;
   font-weight: bold;
-  margin-top: 8px;
-  margin-bottom: 4px;
   border-bottom: 1px solid #ccc;
   padding-bottom: 2px;
 }
@@ -201,23 +210,16 @@
 .message-heading-2 {
   font-size: 1.2em;
   font-weight: bold;
-  margin-top: 8px;
-  margin-bottom: 4px;
 }
 
 .message-heading-3 {
   font-size: 1.1em;
   font-weight: bold;
-  margin-top: 8px;
-  margin-bottom: 4px;
 }
 
-.list-item {
-  padding-left: 20px;
-  margin: 2px 0;
-}
-
+.list-item,
 .list-item-bullet {
   padding-left: 20px;
-  margin: 2px 0;
+  margin: 0;
+  line-height: 1.2;
 }
