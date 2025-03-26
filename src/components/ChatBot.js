@@ -31,8 +31,20 @@ function ChatBot() {
   const formatMessage = (content) => {
     if (!content) return '';
     
+    // Format headings with appropriate line breaks
+    // Replace headers with appropriately styled elements
+    content = content.replace(/### (.*?)(?:\n|$)/g, '<div class="message-heading-3">$1</div>');
+    content = content.replace(/## (.*?)(?:\n|$)/g, '<div class="message-heading-2">$1</div>');
+    content = content.replace(/# (.*?)(?:\n|$)/g, '<div class="message-heading-1">$1</div>');
+    
     // Format numbered lists
     content = content.replace(/(\d+\.\s+)([^\n]+)/g, '<div class="list-item">$1$2</div>');
+    
+    // Format bullet points
+    content = content.replace(/- (.*?)(?:\n|$)/g, '<div class="list-item-bullet">• $1</div>');
+    
+    // Convert line breaks to <br> tags
+    content = content.replace(/\n/g, '<br>');
     
     // Remove asterisks completely
     content = content.replace(/\*/g, '');
