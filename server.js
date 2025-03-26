@@ -231,17 +231,17 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
           formattedData += `- Average Endgame: ${stats.endgamePerformance.toFixed(1)} points\n`;
         }
         
-        // Add existing metrics
+        // Correct the rating scales from /5 to /10
         if (stats.defensiveRating !== undefined) {
-          formattedData += `- Defense Rating: ${stats.defensiveRating.toFixed(1)}/5\n`;
+          formattedData += `- Defense Rating: ${stats.defensiveRating.toFixed(1)}/10\n`;
         }
         
         if (stats.robotSpeedRating !== undefined) {
-          formattedData += `- Robot Speed Rating: ${stats.robotSpeedRating.toFixed(1)}/5\n`;
+          formattedData += `- Robot Speed Rating: ${stats.robotSpeedRating.toFixed(1)}/10\n`;
         }
         
         if (stats.driverSkillRating !== undefined) {
-          formattedData += `- Driver Skill Rating: ${stats.driverSkillRating.toFixed(1)}/5\n`;
+          formattedData += `- Driver Skill Rating: ${stats.driverSkillRating.toFixed(1)}/10\n`;
         }
         
         if (stats.climbSuccess !== undefined) {
@@ -311,17 +311,17 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
             // Format the match line
             let matchLine = `- Match ${match.matchInfo.matchNumber}${bestMatchMarker}: ${totalPoints} total points (Auto: ${autoPoints}, Teleop: ${teleopPoints}, Endgame: ${endgamePoints})`;
             
-            // Add metrics if available for this match
+            // Correct the rating scales from /5 to /10
             if (match.additional?.defenseRating) {
-              matchLine += `, Defense: ${match.additional.defenseRating}/5`;
+              matchLine += `, Defense: ${match.additional.defenseRating}/10`;
             }
             
             if (match.additional?.robotSpeed) {
-              matchLine += `, Speed: ${match.additional.robotSpeed}/5`;
+              matchLine += `, Speed: ${match.additional.robotSpeed}/10`;
             }
             
             if (match.additional?.driverSkill) {
-              matchLine += `, Driver: ${match.additional.driverSkill}/5`;
+              matchLine += `, Driver: ${match.additional.driverSkill}/10`;
             }
             
             formattedData += matchLine + '\n';
@@ -384,10 +384,15 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       formattedData += "\n";
     }
     
-    // Create the prompt with stronger instructions about best matches
+    // Update the system prompt to clarify the rating scales
     let systemPrompt = `You are a helpful FRC (FIRST Robotics Competition) scouting assistant. You help teams analyze match data and provide insights based on scouting information.
 
 For the given query, provide a detailed analysis based on the data provided below. This data is factual and accurate - rely on it completely for your answer.
+
+Important notes about the data:
+- Defense Rating, Robot Speed, and Driver Skill are all rated on a scale of 1-10 (higher is better)
+- Coral can be scored in levels 1-4, with higher levels worth more points
+- Algae can be scored in either the Processor or Net
 
 ${formattedData}
 
