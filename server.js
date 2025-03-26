@@ -245,27 +245,43 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       else if (queryLower.includes('level 2')) level = 2;
       else if (queryLower.includes('level 1')) level = 1;
       
+      // Log raw data first for debugging
+      console.log("===== RAW TEAM DATA =====");
+      Object.entries(relevantData.teams).forEach(([teamNumber, stats]) => {
+        const metricKey = level ? `avgCoralLevel${level}` : 'avgTotalCoral';
+        console.log(`Team ${teamNumber}: ${metricKey} = ${stats[metricKey]}`);
+      });
+      console.log("========================");
+      
       // Get teams ranked by the specific coral level or total coral
       const coralTeams = getTopCoralScoringTeams(relevantData.teams, level, 10);
       
-      // Debug logging
-      console.log(`Coral Level ${level || 'Total'} Rankings:`);
-      coralTeams.forEach(team => {
-        console.log(`Team ${team.teamNumber}: ${team.metricValue.toFixed(2)}`);
+      // More detailed debug logging of sorting results
+      console.log(`===== RANKED CORAL TEAMS (LEVEL ${level || 'TOTAL'}) =====`);
+      coralTeams.forEach((team, index) => {
+        console.log(`${index + 1}. Team ${team.teamNumber}: ${team.metricValue.toFixed(2)}`);
       });
+      console.log("======================================");
+      
+      // Force a resort of coralTeams to be extra certain
+      coralTeams.sort((a, b) => parseFloat(b.metricValue) - parseFloat(a.metricValue));
       
       formattedData += level ? 
         `### Top Teams for Level ${level} Coral Scoring (Ranked)\n\n` : 
         "### Top Teams for Overall Coral Scoring (Ranked)\n\n";
       
+      // Be very explicit about the order when outputting
       coralTeams.forEach((team, index) => {
-        formattedData += `${index + 1}. Team ${team.teamNumber}: `;
+        const teamNum = team.teamNumber;
+        const value = parseFloat(team.metricValue).toFixed(1);
+        
+        formattedData += `${index + 1}. Team ${teamNum}: `;
         
         if (level) {
-          formattedData += `Avg. Level ${level} Coral: ${team.metricValue.toFixed(1)} pieces`;
+          formattedData += `Avg. Level ${level} Coral: ${value} pieces`;
           formattedData += ` (Total Coral: ${team.stats.avgTotalCoral.toFixed(1)} pieces per match)\n`;
         } else {
-          formattedData += `Avg. Total Coral: ${team.metricValue.toFixed(1)} pieces per match\n`;
+          formattedData += `Avg. Total Coral: ${value} pieces per match\n`;
           // Include breakdown by level
           formattedData += `   Level 1: ${team.stats.avgCoralLevel1.toFixed(1)}, `;
           formattedData += `Level 2: ${team.stats.avgCoralLevel2.toFixed(1)}, `;

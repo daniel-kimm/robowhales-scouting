@@ -368,10 +368,35 @@ function getTopTeamsByMetric(teams, metricPath, limit = 10) {
     });
 }
 
-// Specific helper functions for common ranking needs
+// Replace the getTopCoralScoringTeams function with this more explicit version
 function getTopCoralScoringTeams(teams, level, limit = 10) {
-  const metricPath = level ? `avgCoralLevel${level}` : 'avgTotalCoral';
-  return getTopTeamsByMetric(teams, metricPath, limit);
+  const metricKey = level ? `avgCoralLevel${level}` : 'avgTotalCoral';
+  
+  // Convert teams object to array and filter for those with data
+  const teamArray = Object.entries(teams)
+    .map(([teamNumber, stats]) => {
+      return {
+        teamNumber,
+        metricValue: stats[metricKey] || 0,
+        stats: stats
+      };
+    })
+    .filter(team => typeof team.metricValue === 'number');
+  
+  // Sort explicitly by the metric value in descending order
+  teamArray.sort((a, b) => {
+    // Ensure we're comparing numbers
+    const valueA = parseFloat(a.metricValue) || 0;
+    const valueB = parseFloat(b.metricValue) || 0;
+    
+    // Debug log each comparison
+    console.log(`Comparing Team ${a.teamNumber} (${valueA}) vs Team ${b.teamNumber} (${valueB})`);
+    
+    return valueB - valueA; // Descending order (higher values first)
+  });
+  
+  // Take the top N teams
+  return teamArray.slice(0, limit);
 }
 
 function getTopAlgaeScoringTeams(teams, location, limit = 10) {
