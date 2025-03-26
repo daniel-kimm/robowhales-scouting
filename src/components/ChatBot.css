@@ -55,6 +55,13 @@
 
 .message-content {
   width: fit-content;
+  line-height: 1.4;
+}
+
+.message-content br {
+  display: block;
+  content: "";
+  margin-top: 3px;
 }
 
 .input-form {
@@ -183,34 +190,34 @@
 }
 
 .message-heading-1 {
-  font-size: 1.4em;
+  font-size: 1.3em;
   font-weight: bold;
-  margin-top: 16px;
-  margin-bottom: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
   border-bottom: 1px solid #ccc;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 
 .message-heading-2 {
   font-size: 1.2em;
   font-weight: bold;
-  margin-top: 14px;
-  margin-bottom: 7px;
+  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .message-heading-3 {
   font-size: 1.1em;
   font-weight: bold;
-  margin-top: 12px;
-  margin-bottom: 6px;
+  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .list-item {
   padding-left: 20px;
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .list-item-bullet {
   padding-left: 20px;
-  margin: 4px 0;
+  margin: 2px 0;
 }
