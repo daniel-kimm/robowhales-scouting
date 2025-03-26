@@ -321,5 +321,6 @@ function getTopDefensiveTeams(teams, limit = 5) {
 module.exports = {
   retrieveRelevantData,
   extractTeamNumbers,
-  extractMatchNumbers
+  extractMatchNumbers,
+  getTopDefensiveTeams
 }; 
