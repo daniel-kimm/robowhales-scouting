@@ -318,9 +318,72 @@ function getTopDefensiveTeams(teams, limit = 5) {
     }));
 }
 
+// Add these functions to rank teams by specific metrics
+function getTopTeamsByMetric(teams, metricPath, limit = 10) {
+  return Object.entries(teams)
+    .filter(([_, stats]) => {
+      // Access nested properties using path
+      const props = metricPath.split('.');
+      let value = stats;
+      for (const prop of props) {
+        value = value?.[prop];
+        if (value === undefined) return false;
+      }
+      return value > 0;
+    })
+    .sort(([_, statsA], [__, statsB]) => {
+      // Access nested properties for comparison
+      const props = metricPath.split('.');
+      
+      let valueA = statsA;
+      let valueB = statsB;
+      
+      for (const prop of props) {
+        valueA = valueA?.[prop];
+        valueB = valueB?.[prop];
+        
+        if (valueA === undefined) return 1;  // Sort undefined values to the end
+        if (valueB === undefined) return -1;
+      }
+      
+      return valueB - valueA; // Descending order
+    })
+    .slice(0, limit)
+    .map(([teamNumber, stats]) => {
+      // Access the metric value
+      const props = metricPath.split('.');
+      let value = stats;
+      for (const prop of props) {
+        value = value?.[prop];
+      }
+      
+      return {
+        teamNumber,
+        metricValue: value,
+        matchCount: stats.matches.length,
+        stats: stats // Include all stats for reference
+      };
+    });
+}
+
+// Specific helper functions for common ranking needs
+function getTopCoralScoringTeams(teams, level, limit = 10) {
+  const metricPath = level ? `avgCoralLevel${level}` : 'avgTotalCoral';
+  return getTopTeamsByMetric(teams, metricPath, limit);
+}
+
+function getTopAlgaeScoringTeams(teams, location, limit = 10) {
+  const metricPath = location === 'processor' ? 'avgAlgaeProcessor' : 
+                     location === 'net' ? 'avgAlgaeNet' : 'avgTotalAlgae';
+  return getTopTeamsByMetric(teams, metricPath, limit);
+}
+
 module.exports = {
   retrieveRelevantData,
   extractTeamNumbers,
   extractMatchNumbers,
-  getTopDefensiveTeams
+  getTopDefensiveTeams,
+  getTopTeamsByMetric,
+  getTopCoralScoringTeams,
+  getTopAlgaeScoringTeams
 }; 
