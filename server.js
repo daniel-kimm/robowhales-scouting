@@ -248,6 +248,12 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
       // Get teams ranked by the specific coral level or total coral
       const coralTeams = getTopCoralScoringTeams(relevantData.teams, level, 10);
       
+      // Debug logging
+      console.log(`Coral Level ${level || 'Total'} Rankings:`);
+      coralTeams.forEach(team => {
+        console.log(`Team ${team.teamNumber}: ${team.metricValue.toFixed(2)}`);
+      });
+      
       formattedData += level ? 
         `### Top Teams for Level ${level} Coral Scoring (Ranked)\n\n` : 
         "### Top Teams for Overall Coral Scoring (Ranked)\n\n";
