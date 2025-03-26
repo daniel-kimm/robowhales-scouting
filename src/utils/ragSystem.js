@@ -139,13 +139,26 @@ async function retrieveRelevantData(userMessage, db) {
       team.averageScore = team.totalScore / team.matchCount;
       
       // Add other metrics as needed
-      // Calculate auto performance if available
       let autoTotal = 0;
       let teleopTotal = 0;
       let endgameTotal = 0;
       let climbSuccesses = 0;
       let defenseRatingTotal = 0;
       let defenseRatingCount = 0;
+      let robotSpeedTotal = 0;
+      let robotSpeedCount = 0;
+      let driverSkillTotal = 0;
+      let driverSkillCount = 0;
+      
+      // Add coral scoring tracking by level
+      let coralLevel1Total = 0;
+      let coralLevel2Total = 0;
+      let coralLevel3Total = 0;
+      let coralLevel4Total = 0;
+      
+      // Add algae scoring tracking
+      let algaeProcessorTotal = 0;
+      let algaeNetTotal = 0;
       
       team.matches.forEach(match => {
         if (match.scores && typeof match.scores.autoPoints === 'number') {
@@ -170,6 +183,44 @@ async function retrieveRelevantData(userMessage, db) {
           defenseRatingTotal += match.additional.defenseRating;
           defenseRatingCount++;
         }
+        
+        // Add robot speed rating if available
+        if (match.additional && typeof match.additional.robotSpeed === 'number') {
+          robotSpeedTotal += match.additional.robotSpeed;
+          robotSpeedCount++;
+        }
+        
+        // Add driver skill rating if available
+        if (match.additional && typeof match.additional.driverSkill === 'number') {
+          driverSkillTotal += match.additional.driverSkill;
+          driverSkillCount++;
+        }
+        
+        // Track coral scoring by level
+        if (match.teleop && typeof match.teleop.coralLevel1 === 'number') {
+          coralLevel1Total += match.teleop.coralLevel1;
+        }
+        
+        if (match.teleop && typeof match.teleop.coralLevel2 === 'number') {
+          coralLevel2Total += match.teleop.coralLevel2;
+        }
+        
+        if (match.teleop && typeof match.teleop.coralLevel3 === 'number') {
+          coralLevel3Total += match.teleop.coralLevel3;
+        }
+        
+        if (match.teleop && typeof match.teleop.coralLevel4 === 'number') {
+          coralLevel4Total += match.teleop.coralLevel4;
+        }
+        
+        // Track algae scoring
+        if (match.teleop && typeof match.teleop.algaeProcessor === 'number') {
+          algaeProcessorTotal += match.teleop.algaeProcessor;
+        }
+        
+        if (match.teleop && typeof match.teleop.algaeNet === 'number') {
+          algaeNetTotal += match.teleop.algaeNet;
+        }
       });
       
       // Only add these metrics if we have data
@@ -178,10 +229,32 @@ async function retrieveRelevantData(userMessage, db) {
         team.teleopPerformance = teleopTotal / team.matchCount;
         team.endgamePerformance = endgameTotal / team.matchCount;
         team.climbSuccess = climbSuccesses / team.matchCount;
+        
+        // Average coral scoring by level
+        team.avgCoralLevel1 = coralLevel1Total / team.matchCount;
+        team.avgCoralLevel2 = coralLevel2Total / team.matchCount;
+        team.avgCoralLevel3 = coralLevel3Total / team.matchCount;
+        team.avgCoralLevel4 = coralLevel4Total / team.matchCount;
+        
+        // Average algae scoring
+        team.avgAlgaeProcessor = algaeProcessorTotal / team.matchCount;
+        team.avgAlgaeNet = algaeNetTotal / team.matchCount;
+        
+        // Calculate total pieces scored per game
+        team.avgTotalCoral = (coralLevel1Total + coralLevel2Total + coralLevel3Total + coralLevel4Total) / team.matchCount;
+        team.avgTotalAlgae = (algaeProcessorTotal + algaeNetTotal) / team.matchCount;
       }
       
       if (defenseRatingCount > 0) {
         team.defensiveRating = defenseRatingTotal / defenseRatingCount;
+      }
+      
+      if (robotSpeedCount > 0) {
+        team.robotSpeedRating = robotSpeedTotal / robotSpeedCount;
+      }
+      
+      if (driverSkillCount > 0) {
+        team.driverSkillRating = driverSkillTotal / driverSkillCount;
       }
     });
     
