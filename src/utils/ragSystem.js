@@ -329,7 +329,7 @@ function getTopTeamsByMetric(teams, metricPath, limit = 10) {
         value = value?.[prop];
         if (value === undefined) return false;
       }
-      return value > 0;
+      return typeof value === 'number'; // Only include entries with numeric values
     })
     .sort(([_, statsA], [__, statsB]) => {
       // Access nested properties for comparison
@@ -341,12 +341,14 @@ function getTopTeamsByMetric(teams, metricPath, limit = 10) {
       for (const prop of props) {
         valueA = valueA?.[prop];
         valueB = valueB?.[prop];
-        
-        if (valueA === undefined) return 1;  // Sort undefined values to the end
-        if (valueB === undefined) return -1;
       }
       
-      return valueB - valueA; // Descending order
+      // Ensure we're comparing numbers
+      valueA = parseFloat(valueA) || 0;
+      valueB = parseFloat(valueB) || 0;
+      
+      // Sort in descending order (highest first)
+      return valueB - valueA;
     })
     .slice(0, limit)
     .map(([teamNumber, stats]) => {
@@ -359,7 +361,7 @@ function getTopTeamsByMetric(teams, metricPath, limit = 10) {
       
       return {
         teamNumber,
-        metricValue: value,
+        metricValue: parseFloat(value) || 0,
         matchCount: stats.matches.length,
         stats: stats // Include all stats for reference
       };
