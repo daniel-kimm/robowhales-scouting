@@ -23,30 +23,11 @@
       "dest": "/build/static/$1"
     },
     {
-      "src": "^/favicon.ico",
-      "dest": "/build/favicon.ico"
+      "src": "^/(favicon\\.ico|manifest\\.json|asset-manifest\\.json|robots\\.txt)",
+      "dest": "/build/$1"
     },
     {
-      "src": "^/manifest.json",
-      "dest": "/build/manifest.json"
-    },
-    {
-      "src": "^/asset-manifest.json",
-      "dest": "/build/asset-manifest.json"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/data-analysis",
-      "dest": "/build/index.html"
-    },
-    {
-      "src": "/scout-assistant",
-      "dest": "/build/index.html"
-    },
-    {
-      "src": "/.*",
+      "src": "/(.*)",
       "dest": "/build/index.html"
     }
   ]
