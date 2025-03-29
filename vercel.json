@@ -35,7 +35,18 @@
       "dest": "/build/asset-manifest.json"
     },
     {
-      "src": ".*",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/data-analysis",
+      "dest": "/build/index.html"
+    },
+    {
+      "src": "/scout-assistant",
+      "dest": "/build/index.html"
+    },
+    {
+      "src": "/.*",
       "dest": "/build/index.html"
     }
   ]
