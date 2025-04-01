@@ -18,7 +18,7 @@ const {
 
 // Initialize Express
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(cors({
@@ -47,24 +47,19 @@ const openai = new OpenAIApi(configuration);
 // API endpoints
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, conversationHistory = [] } = req.body;
+    const { message } = req.body;
+    console.log("Received message:", message);
     
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
-    }
+    // Get relevant data based on the message
+    const relevantData = await retrieveRelevantData(db, message, "scoutingDataDCMP");
     
-    // Retrieve relevant data based on the user's query
-    const relevantData = await retrieveRelevantData(message, db);
+    // Generate AI response
+    const aiResponse = await generateAIResponse(message, relevantData);
     
-    // Generate a response using OpenAI
-    const aiResponse = await generateAIResponse(message, relevantData, conversationHistory);
-    
-    return res.status(200).json({ 
-      response: aiResponse
-    });
+    res.json({ response: aiResponse });
   } catch (error) {
-    console.error("Error processing chat request:", error);
-    return res.status(500).json({ error: 'Failed to process request' });
+    console.error("Error processing chat message:", error);
+    res.status(500).json({ error: "Failed to process your message" });
   }
 });
 
@@ -223,13 +218,19 @@ async function generateAIResponse(message, relevantData, conversationHistory = [
     if (queryLower.includes('defensive') || queryLower.includes('defense') || 
         queryLower.includes('best defensive') || queryLower.includes('top defensive')) {
       
-      // Get the top defensive teams
+      // Get the top defensive teams - now filtered by playedDefense
       const topDefensiveTeams = getTopDefensiveTeams(relevantData.teams, 10);
       
       formattedData += "### Top Defensive Teams (Ranked)\n\n";
       topDefensiveTeams.forEach((team, index) => {
-        formattedData += `${index + 1}. Team ${team.teamNumber}: Defense Rating ${team.defensiveRating.toFixed(1)}/10 (${team.matchCount} matches)\n`;
+        formattedData += `${index + 1}. Team ${team.teamNumber}: Defense Rating ${team.defensiveRating.toFixed(1)}/10 (${team.matchCount} defensive matches out of ${team.totalMatches} total)\n`;
       });
+      
+      // If no teams played defense, make that clear
+      if (topDefensiveTeams.length === 0) {
+        formattedData += "No teams in the dataset have played defense in their matches.\n";
+      }
+      
       formattedData += "\n";
     }
     
@@ -555,5 +556,5 @@ app.get('*', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

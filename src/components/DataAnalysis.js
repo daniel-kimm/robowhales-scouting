@@ -18,11 +18,11 @@ function DataAnalysis() {
         console.log("Fetching data from Firestore...");
         
         // Make sure this collection name matches what you use in ScoutingForm.js
-        const querySnapshot = await getDocs(collection(db, "scoutingData"));
+        const scoutingSnapshot = await getDocs(collection(db, "scoutingDataDCMP"));
         
-        console.log("Data received:", querySnapshot.size, "documents");
+        console.log("Data received:", scoutingSnapshot.size, "documents");
         const data = [];
-        querySnapshot.forEach((doc) => {
+        scoutingSnapshot.forEach((doc) => {
           const docData = doc.data();
           console.log("Document data:", docData);
           data.push({ id: doc.id, ...docData });

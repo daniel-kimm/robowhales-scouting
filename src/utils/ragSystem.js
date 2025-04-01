@@ -63,51 +63,44 @@ function determineQueryIntent(query) {
 }
 
 // Main function to retrieve relevant data based on user query
-async function retrieveRelevantData(userMessage, db) {
+async function retrieveRelevantData(db, query, collectionName = "scoutingDataDCMP") {
+  console.log(`Retrieving data from ${collectionName} for query: ${query}`);
+  
   try {
+    // Get all scouting data
+    const scoutingSnapshot = await getDocs(collection(db, collectionName));
+    const scoutingData = [];
+    
+    scoutingSnapshot.forEach((doc) => {
+      scoutingData.push(doc.data());
+    });
+    
+    console.log(`Retrieved ${scoutingData.length} documents from ${collectionName}`);
+    
     // Parse the user query to determine intent and extract key information
-    const { intent, teamNumbers, matchNumbers } = parseUserQuery(userMessage);
-    
-    // Create the collection reference
-    const scoutingCollection = collection(db, "scoutingData");
-    
-    // Get all documents
-    const querySnapshot = await getDocs(scoutingCollection);
-    
-    if (querySnapshot.empty) {
-      return {
-        teams: {},
-        matches: [],
-        queryContext: { 
-          intent, 
-          teamNumbers, 
-          matchNumbers,
-          note: "NO_DATA_FOUND"
-        }
-      };
-    }
+    const { intent, teamNumbers, matchNumbers } = parseUserQuery(query);
     
     // Process the documents into team statistics
     let teamStats = {};
     let matchData = [];
     
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
+    scoutingData.forEach(doc => {
+      const data = doc.matchInfo;
       
-      if (!data.matchInfo || !data.matchInfo.teamNumber) {
+      if (!data.teamNumber) {
         return; // Skip this document
       }
       
-      const teamNumber = data.matchInfo.teamNumber;
+      const teamNumber = data.teamNumber;
       const match = {
         id: doc.id,
-        matchInfo: data.matchInfo,
-        scores: data.scores || {},
-        autonomous: data.autonomous || {},
-        teleop: data.teleop || {},
-        endgame: data.endgame || {},
-        additional: data.additional || {},
-        timestamp: data.timestamp
+        matchInfo: data,
+        scores: doc.scores || {},
+        autonomous: doc.autonomous || {},
+        teleop: doc.teleop || {},
+        endgame: doc.endgame || {},
+        additional: doc.additional || {},
+        timestamp: doc.timestamp
       };
       
       // Add to match data
@@ -129,8 +122,8 @@ async function retrieveRelevantData(userMessage, db) {
       teamStats[teamNumber].matchCount++;
       
       // Update score metrics if available
-      if (data.scores && typeof data.scores.totalPoints === 'number') {
-        teamStats[teamNumber].totalScore += data.scores.totalPoints;
+      if (doc.scores && typeof doc.scores.totalPoints === 'number') {
+        teamStats[teamNumber].totalScore += doc.scores.totalPoints;
       }
     });
     
@@ -149,6 +142,7 @@ async function retrieveRelevantData(userMessage, db) {
       let robotSpeedCount = 0;
       let driverSkillTotal = 0;
       let driverSkillCount = 0;
+      let playedDefenseCount = 0;
       
       // Add coral scoring tracking by level
       let coralLevel1Total = 0;
@@ -178,10 +172,14 @@ async function retrieveRelevantData(userMessage, db) {
           climbSuccesses++;
         }
         
-        // Add defense rating if available
-        if (match.additional && typeof match.additional.defenseRating === 'number') {
-          defenseRatingTotal += match.additional.defenseRating;
-          defenseRatingCount++;
+        // Track defense specifically
+        if (match.additional && match.additional.playedDefense === true) {
+          playedDefenseCount++;
+          
+          if (typeof match.additional.defenseRating === 'number') {
+            defenseRatingTotal += match.additional.defenseRating;
+            defenseRatingCount++;
+          }
         }
         
         // Add robot speed rating if available
@@ -245,8 +243,13 @@ async function retrieveRelevantData(userMessage, db) {
         team.avgTotalAlgae = (algaeProcessorTotal + algaeNetTotal) / team.matchCount;
       }
       
+      // Calculate defense metrics only from matches where they played defense
       if (defenseRatingCount > 0) {
         team.defensiveRating = defenseRatingTotal / defenseRatingCount;
+        team.defensiveMatchCount = playedDefenseCount;
+      } else {
+        team.defensiveRating = 0;
+        team.defensiveMatchCount = 0;
       }
       
       if (robotSpeedCount > 0) {
@@ -305,16 +308,51 @@ function parseUserQuery(message) {
   return { intent, teamNumbers, matchNumbers };
 }
 
-// Function to get top defensive teams
+// Function to get top defensive teams - updated to filter by playedDefense
 function getTopDefensiveTeams(teams, limit = 5) {
-  return Object.entries(teams)
-    .filter(([_, stats]) => stats.defensiveRating > 0)
+  // First, recalculate defensive ratings based only on matches where playedDefense is true
+  const teamsWithDefensiveRatings = Object.entries(teams)
+    .map(([teamNumber, stats]) => {
+      // Filter matches to only those where playedDefense is true
+      const defensiveMatches = stats.matches.filter(
+        match => match.additional?.playedDefense === true
+      );
+      
+      // If no defensive matches, return team with 0 defensive rating
+      if (defensiveMatches.length === 0) {
+        return [teamNumber, { ...stats, defensiveRating: 0, defensiveMatchCount: 0 }];
+      }
+      
+      // Calculate average defense rating only from matches where they played defense
+      const defenseRatingTotal = defensiveMatches.reduce((sum, match) => {
+        return sum + (match.additional?.defenseRating || 0);
+      }, 0);
+      
+      const defensiveMatchCount = defensiveMatches.length;
+      const defenseRating = defensiveMatchCount > 0 ? 
+        defenseRatingTotal / defensiveMatchCount : 0;
+      
+      // Return team with updated defensive rating
+      return [teamNumber, { 
+        ...stats, 
+        defensiveRating: defenseRating,
+        defensiveMatchCount: defensiveMatchCount 
+      }];
+    });
+  
+  // Convert back to object
+  const updatedTeams = Object.fromEntries(teamsWithDefensiveRatings);
+  
+  // Now filter and sort teams based on the recalculated defensive ratings
+  return Object.entries(updatedTeams)
+    .filter(([_, stats]) => stats.defensiveMatchCount > 0) // Only include teams that played defense
     .sort(([_, statsA], [__, statsB]) => statsB.defensiveRating - statsA.defensiveRating)
     .slice(0, limit)
     .map(([teamNumber, stats]) => ({
       teamNumber,
       defensiveRating: stats.defensiveRating,
-      matchCount: stats.matches.length
+      matchCount: stats.defensiveMatchCount,
+      totalMatches: stats.matches.length
     }));
 }
 
