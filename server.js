@@ -543,7 +543,7 @@ IMPORTANT INSTRUCTIONS:
 // This catch-all route must be AFTER all API routes
 // It will handle all non-API routes and serve the React app
 app.get('*', (req, res) => {
-  // Only skip API routes if they haven't been handled already
+  // Skip API routes
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
