@@ -42,64 +42,72 @@ function App() {
     }
   };
   
-  // Simple password page
-  if (!isAuthenticated) {
-    return (
-      <div className="password-protection">
-        <div className="password-container">
-          <h1 className="app-title">robowhales|9032</h1>
-          <h2>Scouting App</h2>
-          <p>Please enter the password to access the scouting app:</p>
+  // Password component
+  const PasswordProtection = () => (
+    <div className="password-protection">
+      <div className="password-container">
+        <h1 className="app-title">robowhales|9032</h1>
+        <h2>Scouting App</h2>
+        <p>Please enter the password to access the scouting app:</p>
+        
+        <form onSubmit={handlePasswordSubmit}>
+          <div className="form-group">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              className="password-input"
+              autoFocus
+            />
+          </div>
           
-          <form onSubmit={handlePasswordSubmit}>
-            <div className="form-group">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="password-input"
-                autoFocus
-              />
-            </div>
-            
-            {error && <div className="error-message">{error}</div>}
-            
-            <button type="submit" className="submit-btn">
-              Enter
-            </button>
-          </form>
-        </div>
+          {error && <div className="error-message">{error}</div>}
+          
+          <button type="submit" className="submit-btn">
+            Enter
+          </button>
+        </form>
       </div>
-    );
-  }
+    </div>
+  );
+  
+  // Protected route component
+  const ProtectedRoute = ({ element }) => {
+    return isAuthenticated ? element : <PasswordProtection />;
+  };
   
   // Main app content
   return (
     <Router>
       <div className="app">
-        <header className="app-header">
-          <h1 className="app-title">robowhales|9032</h1>
-          <nav>
-            <Link to="/">Scouting Form</Link>
-            <Link to="/analysis">Data Analysis</Link>
-            <Link to="/assistant">Scout Assistant</Link>
-          </nav>
-        </header>
+        {isAuthenticated && (
+          <header className="app-header">
+            <h1 className="app-title">robowhales|9032</h1>
+            <nav>
+              <Link to="/">Scouting Form</Link>
+              <Link to="/analysis">Data Analysis</Link>
+              <Link to="/assistant">Scout Assistant</Link>
+              <Link to="/admin">Admin Tools</Link>
+            </nav>
+          </header>
+        )}
         
         <main>
           <Routes>
-            <Route path="/" element={<ScoutingForm />} />
-            <Route path="/analysis" element={<DataAnalysis />} />
-            <Route path="/assistant" element={<ChatBot />} />
-            <Route path="/test-chat" element={<TestChat />} />
-            <Route path="/admin" element={<AdminTools />} />
+            <Route path="/" element={<ProtectedRoute element={<ScoutingForm />} />} />
+            <Route path="/analysis" element={<ProtectedRoute element={<DataAnalysis />} />} />
+            <Route path="/assistant" element={<ProtectedRoute element={<ChatBot />} />} />
+            <Route path="/test-chat" element={<ProtectedRoute element={<TestChat />} />} />
+            <Route path="/admin" element={<ProtectedRoute element={<AdminTools />} />} />
           </Routes>
         </main>
         
-        <footer>
-          <p>© {new Date().getFullYear()} RoboWhales FRC Team 9032, Cary, NC</p>
-        </footer>
+        {isAuthenticated && (
+          <footer>
+            <p>© {new Date().getFullYear()} RoboWhales FRC Team 9032, Cary, NC</p>
+          </footer>
+        )}
       </div>
     </Router>
   );
