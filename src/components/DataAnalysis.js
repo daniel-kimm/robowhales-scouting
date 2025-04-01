@@ -75,6 +75,43 @@ function DataAnalysis() {
     setFilteredData(scoutingData);
   };
 
+  // New function to export notes to a text file
+  const exportNotesToFile = () => {
+    // Extract notes from each match record
+    const notes = filteredData.map(match => {
+      const teamNumber = match.matchInfo?.teamNumber || 'Unknown Team';
+      const matchNumber = match.matchInfo?.matchNumber || 'Unknown Match';
+      const note = match.additional?.notes || '';
+      
+      // Format as: "Team 9032, Match 1: This is a note about their performance"
+      return `Team ${teamNumber}, Match ${matchNumber}: ${note}`;
+    })
+    // Filter out empty notes
+    .filter(note => !note.endsWith(': '));
+    
+    // Create the file content with each note on a new line
+    const fileContent = notes.join('\n');
+    
+    // Create a blob with the text content
+    const blob = new Blob([fileContent], { type: 'text/plain' });
+    
+    // Create a URL for the blob
+    const url = URL.createObjectURL(blob);
+    
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scouter_notes${teamFilter ? `_team_${teamFilter}` : ''}.txt`;
+    
+    // Trigger the download
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return <div className="container">Loading data...</div>;
   }
@@ -136,6 +173,29 @@ function DataAnalysis() {
       
       <h3>Match History</h3>
       <MatchTable matches={filteredData} />
+      
+      {/* New export button */}
+      {filteredData.length > 0 && (
+        <div className="export-section" style={{ marginTop: '30px', marginBottom: '30px' }}>
+          <button 
+            onClick={exportNotesToFile}
+            style={{
+              backgroundColor: '#4285f4',
+              color: 'white',
+              padding: '10px 15px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Export Scouter Notes to Text File
+          </button>
+          <p style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
+            Download all notes from the currently displayed matches as a text file.
+          </p>
+        </div>
+      )}
       
     </div>
   );
