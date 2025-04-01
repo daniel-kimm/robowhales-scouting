@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { getFirestore, getDocs, collection } from 'firebase/firestore';
 import { removeDuplicateMatches } from '../utils/duplicateRemover';
 import './AdminTools.css';
+import { db } from '../firebase';
 
 function AdminTools() {
   const [loading, setLoading] = useState(false);
