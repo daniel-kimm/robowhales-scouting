@@ -75,22 +75,50 @@ function DataAnalysis() {
     setFilteredData(scoutingData);
   };
 
-  // New function to export notes to a text file
+  // Updated function to export notes organized by team number
   const exportNotesToFile = () => {
-    // Extract notes from each match record
-    const notes = filteredData.map(match => {
+    // Group notes by team number
+    const notesByTeam = {};
+    
+    filteredData.forEach(match => {
       const teamNumber = match.matchInfo?.teamNumber || 'Unknown Team';
       const matchNumber = match.matchInfo?.matchNumber || 'Unknown Match';
       const note = match.additional?.notes || '';
       
-      // Format as: "Team 9032, Match 1: This is a note about their performance"
-      return `Team ${teamNumber}, Match ${matchNumber}: ${note}`;
-    })
-    // Filter out empty notes
-    .filter(note => !note.endsWith(': '));
+      // Skip empty notes
+      if (!note.trim()) return;
+      
+      // Create team entry if it doesn't exist
+      if (!notesByTeam[teamNumber]) {
+        notesByTeam[teamNumber] = [];
+      }
+      
+      // Add this note to the team's collection
+      notesByTeam[teamNumber].push({
+        matchNumber,
+        note,
+        formatted: `Match ${matchNumber}: ${note}`
+      });
+    });
     
-    // Create the file content with each note on a new line
-    const fileContent = notes.join('\n');
+    // Get sorted team numbers (convert to numbers for proper sorting)
+    const sortedTeams = Object.keys(notesByTeam).sort((a, b) => {
+      // Handle 'Unknown Team' special case
+      if (a === 'Unknown Team') return 1;
+      if (b === 'Unknown Team') return -1;
+      
+      // Convert to numbers and compare
+      return parseInt(a) - parseInt(b);
+    });
+    
+    // Build file content with team headers and indented notes
+    const fileContent = sortedTeams.map(teamNumber => {
+      const teamNotes = notesByTeam[teamNumber];
+      const teamHeader = `Team ${teamNumber}:`;
+      const formattedNotes = teamNotes.map(entry => `  ${entry.formatted}`).join('\n');
+      
+      return `${teamHeader}\n${formattedNotes}`;
+    }).join('\n\n');
     
     // Create a blob with the text content
     const blob = new Blob([fileContent], { type: 'text/plain' });
