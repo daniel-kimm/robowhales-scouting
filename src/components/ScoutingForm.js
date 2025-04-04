@@ -468,7 +468,7 @@ function ScoutingForm() {
               id="cycleTime" 
               value={formData.teleop.cycleTime}
               onChange={(e) => handleInputChange('teleop', 'cycleTime', e.target.value)}
-              placeholder="e.g., 15.5"
+              placeholder=""
             />
           </div>
           
