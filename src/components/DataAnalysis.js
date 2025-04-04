@@ -75,7 +75,7 @@ function DataAnalysis() {
     setFilteredData(scoutingData);
   };
 
-  // Updated function to export notes organized by team number
+  // Updated function to export notes organized by team number with scouter initials
   const exportNotesToFile = () => {
     // Group notes by team number
     const notesByTeam = {};
@@ -84,6 +84,7 @@ function DataAnalysis() {
       const teamNumber = match.matchInfo?.teamNumber || 'Unknown Team';
       const matchNumber = match.matchInfo?.matchNumber || 'Unknown Match';
       const note = match.additional?.notes || '';
+      const scouterInitials = match.matchInfo?.scouterInitials || match.scouterInitials || 'Unknown';
       
       // Skip empty notes
       if (!note.trim()) return;
@@ -93,11 +94,12 @@ function DataAnalysis() {
         notesByTeam[teamNumber] = [];
       }
       
-      // Add this note to the team's collection
+      // Add this note to the team's collection with scouter initials
       notesByTeam[teamNumber].push({
         matchNumber,
         note,
-        formatted: `Match ${matchNumber}: ${note}`
+        scouterInitials,
+        formatted: `Match ${matchNumber} (${scouterInitials}): ${note}`
       });
     });
     
