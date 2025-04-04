@@ -26,7 +26,9 @@ function ScoutingForm() {
       coralLevel4: 0,
       algaeProcessor: 0,
       algaeNet: 0,
-      algaeDescored: 0
+      algaeDescored: 0,
+      missedCycles: 0,
+      cycleTime: ''
     },
     endgame: {
       robotParked: false,
@@ -212,7 +214,9 @@ function ScoutingForm() {
         coralLevel4: 0,
         algaeProcessor: 0,
         algaeNet: 0,
-        algaeDescored: 0
+        algaeDescored: 0,
+        missedCycles: 0,
+        cycleTime: ''
       },
       endgame: {
         robotParked: false,
@@ -398,27 +402,38 @@ function ScoutingForm() {
           <h3>Coral Scored (Teleop)</h3>
           <div className="coral-scoring">
             <Counter 
-              label="Level 1 (2 pts):" 
+              label="Level 1 (1 pt):" 
               value={formData.teleop.coralLevel1}
               onChange={(value) => handleInputChange('teleop', 'coralLevel1', value)}
+              field="coralLevel1"
             />
             
             <Counter 
-              label="Level 2 (3 pts):" 
+              label="Level 2 (2 pts):" 
               value={formData.teleop.coralLevel2}
               onChange={(value) => handleInputChange('teleop', 'coralLevel2', value)}
+              field="coralLevel2"
             />
             
             <Counter 
-              label="Level 3 (4 pts):" 
+              label="Level 3 (3 pts):" 
               value={formData.teleop.coralLevel3}
               onChange={(value) => handleInputChange('teleop', 'coralLevel3', value)}
+              field="coralLevel3"
             />
             
             <Counter 
-              label="Level 4 (5 pts):" 
+              label="Level 4 (4 pts):" 
               value={formData.teleop.coralLevel4}
               onChange={(value) => handleInputChange('teleop', 'coralLevel4', value)}
+              field="coralLevel4"
+            />
+            
+            <Counter 
+              label="Missed Cycles:" 
+              value={formData.teleop.missedCycles}
+              onChange={(value) => handleInputChange('teleop', 'missedCycles', value)}
+              field="missedCycles"
             />
           </div>
           
@@ -443,6 +458,17 @@ function ScoutingForm() {
               value={formData.teleop.algaeDescored}
               onChange={(value) => handleInputChange('teleop', 'algaeDescored', value)}
               field="algaeDescored"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="cycleTime">Cycle Time (seconds):</label>
+            <input 
+              type="text" 
+              id="cycleTime" 
+              value={formData.teleop.cycleTime}
+              onChange={(e) => handleInputChange('teleop', 'cycleTime', e.target.value)}
+              placeholder="e.g., 15.5"
             />
           </div>
           
