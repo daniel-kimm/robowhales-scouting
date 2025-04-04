@@ -774,3 +774,157 @@ textarea.full-width {
   font-size: 0.9rem;
   color: #555;
 }
+
+/* Match Table Interactions */
+.match-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.match-row:hover {
+  background-color: #f0f8ff;
+}
+
+/* Match Detail Styles - reusing existing modal styles */
+.match-detail-section {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.match-detail-section:last-child {
+  border-bottom: none;
+}
+
+.match-detail-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Reusing the detailed-grid pattern for match details */
+.match-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.match-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detail-label {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+}
+
+.total-score {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.total-score .detail-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #0066cc;
+}
+
+/* Reusing the same section styling as team stats */
+.match-detail-section.auto {
+  background-color: rgba(255, 99, 132, 0.05);
+  border-left: 4px solid rgba(255, 99, 132, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.match-detail-section.teleop {
+  background-color: rgba(54, 162, 235, 0.05);
+  border-left: 4px solid rgba(54, 162, 235, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.match-detail-section.endgame {
+  background-color: rgba(75, 192, 192, 0.05);
+  border-left: 4px solid rgba(75, 192, 192, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.match-detail-section.additional {
+  background-color: rgba(153, 102, 255, 0.05);
+  border-left: 4px solid rgba(153, 102, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.match-detail-section.score-summary {
+  background-color: rgba(255, 159, 64, 0.05);
+  border-left: 4px solid rgba(255, 159, 64, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+/* Notes container already exists, just add match-specific styling */
+.match-detail-section.notes .notes-container {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #ddd;
+  margin-top: 10px;
+}
+
+.match-detail-section.notes .note-text {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.match-detail-section.notes .no-notes {
+  color: #888;
+  font-style: italic;
+}
+
+/* Alliance colors in the details */
+.detail-value.red {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.detail-value.blue {
+  color: #0066cc;
+  font-weight: bold;
+}
+
+/* Section header color coding - match to the border colors */
+.match-detail-section.auto h3 {
+  color: rgba(255, 99, 132, 1);
+}
+
+.match-detail-section.teleop h3 {
+  color: rgba(54, 162, 235, 1);
+}
+
+.match-detail-section.endgame h3 {
+  color: rgba(75, 192, 192, 1);
+}
+
+.match-detail-section.additional h3 {
+  color: rgba(153, 102, 255, 1);
+}
+
+.match-detail-section.score-summary h3 {
+  color: rgba(255, 159, 64, 1);
+}
