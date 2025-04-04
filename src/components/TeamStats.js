@@ -77,6 +77,7 @@ function TeamStats({ matches }) {
     const avgTeleopAlgaeProcessor = calculateAverage(teamMatches, 'teleop.algaeProcessor');
     const avgTeleopAlgaeNet = calculateAverage(teamMatches, 'teleop.algaeNet');
     const avgTeleopAlgaeDescored = calculateAverage(teamMatches, 'teleop.algaeDescored');
+    const avgTeleopMissedCycles = calculateAverage(teamMatches, 'teleop.missedCycles');
     
     // Endgame
     const robotParkedPercentage = calculatePercentage(teamMatches, 'endgame.robotParked');
@@ -90,6 +91,17 @@ function TeamStats({ matches }) {
     const avgRobotSpeed = calculateAverage(teamMatches, 'additional.robotSpeed');
     const robotDiedPercentage = calculatePercentage(teamMatches, 'additional.robotDied');
     const robotTippedPercentage = calculatePercentage(teamMatches, 'additional.robotTipped');
+    
+    // Calculate average cycle time
+    // First filter out matches with no cycle time data or invalid data
+    const matchesWithCycleTime = teamMatches.filter(match => {
+      const cycleTime = match.teleop?.cycleTime;
+      return cycleTime && !isNaN(parseFloat(cycleTime));
+    });
+    
+    const avgCycleTime = matchesWithCycleTime.length > 0 
+      ? matchesWithCycleTime.reduce((sum, match) => sum + parseFloat(match.teleop.cycleTime), 0) / matchesWithCycleTime.length 
+      : null;
     
     // Calculate offensive efficiency (points per match)
     const offensiveEfficiency = avgTotalPoints;
@@ -135,7 +147,8 @@ function TeamStats({ matches }) {
         coralLevel4: avgTeleopCoralLevel4,
         algaeProcessor: avgTeleopAlgaeProcessor,
         algaeNet: avgTeleopAlgaeNet,
-        algaeDescored: avgTeleopAlgaeDescored
+        algaeDescored: avgTeleopAlgaeDescored,
+        missedCycles: avgTeleopMissedCycles
       },
       endgame: {
         robotParked: robotParkedPercentage,
@@ -148,7 +161,8 @@ function TeamStats({ matches }) {
         driverSkill: avgDriverSkill,
         robotSpeed: avgRobotSpeed,
         robotDied: robotDiedPercentage,
-        robotTipped: robotTippedPercentage
+        robotTipped: robotTippedPercentage,
+        cycleTime: avgCycleTime
       },
       // Add scouter notes to the team stats
       scouterNotes,
@@ -475,6 +489,10 @@ function TeamStats({ matches }) {
                       <div className="detailed-value">{selectedTeam.teleop.coralLevel4.toFixed(2)} avg</div>
                     </div>
                     <div className="detailed-item">
+                      <div className="detailed-label">Missed Cycles</div>
+                      <div className="detailed-value">{selectedTeam.teleop.missedCycles.toFixed(2)} avg</div>
+                    </div>
+                    <div className="detailed-item">
                       <div className="detailed-label">Algae Processor</div>
                       <div className="detailed-value">{selectedTeam.teleop.algaeProcessor.toFixed(2)} avg</div>
                     </div>
@@ -529,6 +547,14 @@ function TeamStats({ matches }) {
                     <div className="detailed-item">
                       <div className="detailed-label">Robot Speed</div>
                       <div className="detailed-value">{selectedTeam.additional.robotSpeed.toFixed(1)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Cycle Time</div>
+                      <div className="detailed-value">
+                        {selectedTeam.additional.cycleTime !== null 
+                          ? `${selectedTeam.additional.cycleTime.toFixed(1)} sec` 
+                          : 'N/A'}
+                      </div>
                     </div>
                     <div className="detailed-item">
                       <div className="detailed-label">Robot Died</div>
