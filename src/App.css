@@ -712,24 +712,21 @@ textarea.full-width {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f0f8ff; /* Light blue background */
   padding: 20px;
-  /* Default: no forced viewport width to avoid mobile overflow */
-  width: 100%;
-  margin-left: 0;
-  /* Compensate for parent .app's 20px padding to remove top/bottom white strips */
-  margin-top: -20px;
-  margin-bottom: -20px;
+  /* Override parent padding and make it full viewport */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  margin: 0;
+  overflow: hidden;
 }
 
-/* On wider screens, create full-bleed background inside centered .app */
-@media (min-width: 1201px) {
-  .password-protection {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-  }
-}
+/* Password protection is always full viewport, no media query needed */
 
 /* Password container responsiveness */
 .password-container {
@@ -757,11 +754,9 @@ textarea.full-width {
     padding-right: 12px;
     box-sizing: border-box;
   }
-  /* Remove inner padding and margin compensation so blue hits edges on mobile */
+  /* Adjust password protection padding on mobile */
   .password-protection {
-    padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
+    padding: 16px;
   }
 }
 
