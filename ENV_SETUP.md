@@ -19,7 +19,9 @@ REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id
 ### Firebase Admin SDK (Server-side)
 
 ```
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n"
+# Do NOT paste raw PEM blocks in your repo or docs.
+# Put your private key as a single-line env var with \n escapes, e.g.:
+FIREBASE_PRIVATE_KEY=your_private_key_with_escaped_newlines
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
 FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 ```
