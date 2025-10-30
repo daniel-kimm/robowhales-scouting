@@ -224,10 +224,10 @@ function AdminTools() {
   
   return (
     <div className="admin-tools">
-      <h2>Admin Tools</h2>
+      <h1>Admin Tools</h1>
       
       <div className="card">
-        <h3>Data Cleanup</h3>
+        <h2>Data Cleanup</h2>
         
         <div className="option-toggle">
           <label>
@@ -246,8 +246,8 @@ function AdminTools() {
           className={dryRun ? "primary-button" : "danger-button"}
         >
           {loading ? 'Processing...' : dryRun ? 
-            'Find Duplicate Matches (Safe Preview)' : 
-            'REMOVE Duplicate Matches (Permanent)'}
+            'Find Duplicate Matches' : 
+            'Remove Duplicate Matches'}
         </button>
         
         {error && (

@@ -1,5 +1,39 @@
+/* Mobile safety: prevent horizontal scroll */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* Import Google Fonts for RoboWhales branding */
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
+
+/* Force font loading and application */
+* {
+  font-family: "Instrument Sans", sans-serif !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.app-title,
+.team-name {
+  font-family: "Instrument Serif", serif !important;
+}
+
+/* Ensure fonts are loaded */
+@font-face {
+  font-family: "Instrument Sans";
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-display: swap;
+}
 
 /* Import Blade Runner Movie Font */
 @font-face {
@@ -16,14 +50,14 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 800;
+  font-family: "Instrument Serif", serif !important;
+  font-weight: 600;
   color: #0066cc; /* RoboWhales blue color */
 }
 
-/* App title styling with Blade Runner font */
+/* App title styling — use BladeRunner for "RoboWhales | 9032" */
 .app-title {
-  font-family: "BladeRunner", sans-serif;
+  font-family: "BladeRunner", sans-serif !important;
   font-size: 2.5rem;
   text-transform: none; /* Important: don't transform to uppercase */
   color: #0066cc;
@@ -35,8 +69,8 @@ h6 {
 
 /* Team name styling */
 .team-name {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 800;
+  font-family: "Instrument Serif", serif !important;
+  font-weight: 400;
   font-size: 1.8rem;
   color: #0066cc;
   text-transform: uppercase;
@@ -44,15 +78,15 @@ h6 {
 
 /* Body text */
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: "Instrument Sans", sans-serif !important;
   line-height: 1.6;
 }
 
 /* Update button styling to match RoboWhales branding */
 .submit-btn,
 button {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
+  font-family: "Instrument Sans", sans-serif !important;
+  font-weight: 600;
 }
 
 /* App Container */
@@ -60,7 +94,7 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Instrument Sans", sans-serif !important;
 }
 
 /* Header */
@@ -73,24 +107,90 @@ button {
   border-bottom: 1px solid #ddd;
 }
 
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Hamburger button */
+.nav-toggle {
+  display: none;
+  background: transparent !important;
+  border: 0;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.nav-toggle .bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: #333;
+  margin: 5px 0;
+  transition: background-color 0.2s ease;
+}
+
+/* Keep hamburger background transparent on interactions */
+.nav-toggle:hover,
+.nav-toggle:focus,
+.nav-toggle:active {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.app-nav {
+  display: flex;
+  gap: 20px;
+}
+
+/* Mobile header behavior */
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 1.6rem; /* smaller title on mobile */
+  }
+
+  .nav-toggle {
+    display: inline-block;
+  }
+
+  .app-nav {
+    position: absolute;
+    top: 64px;
+    right: 16px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 10px 12px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+  }
+
+  .app-nav.open {
+    display: flex;
+  }
+
+  .app-header {
+    position: relative;
+  }
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 24px;
   color: #333;
 }
 
-.app-header nav {
-  display: flex;
-  gap: 20px;
-}
-
-.app-header nav a {
+.app-nav a {
   text-decoration: none;
   color: #0066cc;
   font-weight: bold;
 }
 
-.app-header nav a:hover {
+.app-nav a:hover {
   text-decoration: underline;
 }
 
@@ -115,6 +215,11 @@ footer {
   margin: 0 auto;
 }
 
+/* Subheaders inside sections (e.g., Coral Scored) should be black */
+.section h3 {
+  color: #000;
+}
+
 .section {
   margin-bottom: 30px;
   padding: 20px;
@@ -132,7 +237,7 @@ footer {
 label {
   display: block;
   margin-bottom: 5px;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 input[type="text"],
@@ -181,26 +286,46 @@ button:hover {
 /* Counter Component */
 .counter {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 10px;
+  flex-direction: column; /* stack controls below label */
+  align-items: flex-start;
+  margin-bottom: 12px;
   padding: 0 5px;
 }
 
-.counter label {
+.counter label,
+.counter .counter-label {
   flex: 0 0 auto;
-  margin-right: auto;
-  margin-bottom: 0;
+  margin-right: 0;
+  margin-bottom: 6px; /* space between label and controls */
   text-align: left;
-  font-size: 14px;
+  font-size: 16px; /* match other field labels */
 }
 
 .counter-controls {
   display: flex;
   align-items: center;
-  width: 70px;
-  justify-content: space-between;
-  margin-left: 5px;
+  gap: 6px;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+/* Make +/- buttons the same height as number input */
+.counter-controls input[type="number"] {
+  height: 36px;
+  padding: 6px 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.counter-controls button {
+  height: 36px;
+  width: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border-radius: 4px;
 }
 
 .counter-btn {
@@ -466,6 +591,10 @@ select.full-width {
   font-weight: normal;
 }
 
+.checkbox-group label strong {
+  font-weight: normal;
+}
+
 .checkbox-group input[type="checkbox"] {
   margin-right: 8px;
 }
@@ -497,6 +626,62 @@ textarea.full-width {
   min-height: 100vh;
   background-color: #f0f8ff; /* Light blue background */
   padding: 20px;
+  /* Default: no forced viewport width to avoid mobile overflow */
+  width: 100%;
+  margin-left: 0;
+  /* Compensate for parent .app's 20px padding to remove top/bottom white strips */
+  margin-top: -20px;
+  margin-bottom: -20px;
+}
+
+/* On wider screens, create full-bleed background inside centered .app */
+@media (min-width: 1201px) {
+  .password-protection {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+}
+
+/* Password container responsiveness */
+.password-container {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+}
+
+.password-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.password-protection .submit-btn {
+  width: 100%;
+}
+
+/* General container padding on small screens */
+@media (max-width: 600px) {
+  .app {
+    padding: 12px;
+  }
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+  }
+  /* Remove inner padding and margin compensation so blue hits edges on mobile */
+  .password-protection {
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* Make wide tables scroll instead of overflowing viewport */
+table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .password-container {
@@ -512,9 +697,9 @@ textarea.full-width {
   align-items: center;
 }
 
-/* Password page title styling */
+/* Password page title styling — keep BladeRunner */
 .password-container .app-title {
-  font-family: "BladeRunner", sans-serif;
+  font-family: "BladeRunner", sans-serif !important;
   font-size: 2rem; /* Smaller than the main title */
   text-transform: none;
   color: #333; /* Dark gray/black color to match header */
@@ -527,7 +712,8 @@ textarea.full-width {
   margin-top: 0;
   margin-bottom: 20px;
   color: #0066cc;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  font-weight: 600;
 }
 
 .password-container p {

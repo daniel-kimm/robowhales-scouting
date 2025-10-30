@@ -156,11 +156,11 @@ function DataAnalysis() {
 
   if (filteredData.length === 0) {
     return <div className="container">
-      <h2>Team Performance Analysis</h2>
+      <h1>Team Performance Analysis</h1>
       <p>No data available. {teamFilter ? `No results found for team ${teamFilter}.` : 'Try adding some scouting data first.'}</p>
       
       <div className="filters">
-        <h3>Filters</h3>
+        <h2>Filters</h2>
         <div className="form-group">
           <label htmlFor="teamFilter">Team Number:</label>
           <input 

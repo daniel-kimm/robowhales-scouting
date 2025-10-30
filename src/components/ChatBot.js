@@ -134,7 +134,7 @@ function ChatBot() {
   return (
     <div className="container">
       <div className="chatbot-header">
-        <h2 className="chatbot-title">Scout Assistant</h2>
+        <h1 className="chatbot-title">Scout Assistant</h1>
         <button 
           className="clear-chat-button" 
           onClick={clearChatHistory}

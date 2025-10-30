@@ -9,6 +9,7 @@ import './App.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const correctPassword = '***REMOVED***';
@@ -83,8 +84,20 @@ function App() {
       <div className="app">
         {isAuthenticated && (
           <header className="app-header">
-            <h1 className="app-title">robowhales|9032</h1>
-            <nav>
+            <div className="app-header-left">
+              <h1 className="app-title">robowhales|9032</h1>
+            </div>
+            <button
+              className="nav-toggle"
+              aria-label="Toggle navigation menu"
+              aria-expanded={isNavOpen}
+              onClick={() => setIsNavOpen(!isNavOpen)}
+            >
+              <span className="bar" />
+              <span className="bar" />
+              <span className="bar" />
+            </button>
+            <nav className={`app-nav ${isNavOpen ? 'open' : ''}`} onClick={() => setIsNavOpen(false)}>
               <Link to="/">Scouting Form</Link>
               <Link to="/analysis">Data Analysis</Link>
               <Link to="/assistant">Scout Assistant</Link>

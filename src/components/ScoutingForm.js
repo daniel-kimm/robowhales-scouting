@@ -276,7 +276,7 @@ function ScoutingForm() {
 
   return (
     <div className="container">
-      <h2>Match Scouting Form</h2>
+      <h1>Match Scouting Form</h1>
       
       <form onSubmit={handleSubmit}>
         {/* Match Info */}
