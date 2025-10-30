@@ -247,7 +247,7 @@ function ScoutingForm() {
       // Log the final data being submitted
       console.log("Final data being submitted:", dataToSubmit);
       
-      await addDoc(collection(db, "scoutingDataChamps"), dataToSubmit);
+      await addDoc(collection(db, "scoutingDataThor"), dataToSubmit);
       console.log("Document successfully added!");
     } catch (error) {
       console.error("Error adding document: ", error);

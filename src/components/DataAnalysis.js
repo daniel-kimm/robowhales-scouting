@@ -17,8 +17,8 @@ function DataAnalysis() {
       try {
         console.log("Fetching data from Firestore...");
         
-        // Changed collection name from "scoutingDataDCMP" to "scoutingDataChamps"
-        const scoutingSnapshot = await getDocs(collection(db, "scoutingDataChamps"));
+        // Changed collection name from "scoutingDataDCMP" to "scoutingDataThor"
+        const scoutingSnapshot = await getDocs(collection(db, "scoutingDataThor"));
         
         console.log("Data received:", scoutingSnapshot.size, "documents");
         const data = [];

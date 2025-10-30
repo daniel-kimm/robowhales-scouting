@@ -37,13 +37,13 @@ async function testFirebaseConnection() {
     results.dbCreated = true;
     console.log("✓ Firestore instance created");
     
-    console.log("3. Attempting to access 'scoutingData' collection...");
-    const scoutingCollection = collection(db, "scoutingData");
+    console.log("3. Attempting to access 'scoutingDataThor' collection...");
+    const scoutingCollection = collection(db, "scoutingDataThor");
     results.collectionAccess = true;
     console.log("✓ Collection reference created");
     
     console.log("4. Attempting to query Firestore...");
-    const querySnapshot = await getDocs(collection(db, "scoutingData"));
+    const querySnapshot = await getDocs(collection(db, "scoutingDataThor"));
     results.queryExecuted = true;
     console.log("✓ Query executed successfully");
     
@@ -84,7 +84,7 @@ async function exportAllData() {
   try {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const querySnapshot = await getDocs(collection(db, "scoutingData"));
+    const querySnapshot = await getDocs(collection(db, "scoutingDataThor"));
     
     const allData = [];
     querySnapshot.forEach(doc => {

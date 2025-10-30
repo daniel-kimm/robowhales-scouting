@@ -21,6 +21,8 @@ async function runCollectionDiagnostics() {
     
     // Check all potential collection names
     const collections = [
+      "scoutingDataThor",
+      "scoutingDataChamps",
       "scoutingData",
       "scouting_data",
       "ScoutingData",

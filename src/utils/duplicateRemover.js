@@ -6,7 +6,7 @@ import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/fire
  * @param {string} collectionName - Collection to check for duplicates
  * @returns {Object} - Statistics about deleted duplicates
  */
-export const removeDuplicateMatches = async (db, collectionName = "scoutingDataChamps") => {
+export const removeDuplicateMatches = async (db, collectionName = "scoutingDataThor") => {
   try {
     // Step 1: Fetch all match data with document IDs
     const matchesSnapshot = await getDocs(collection(db, collectionName));

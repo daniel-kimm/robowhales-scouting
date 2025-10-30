@@ -63,7 +63,7 @@ function determineQueryIntent(query) {
 }
 
 // Main function to retrieve relevant data based on user query
-async function retrieveRelevantData(db, query, collectionName = "scoutingDataChamps") {
+async function retrieveRelevantData(db, query, collectionName = "scoutingDataThor") {
   console.log(`Retrieving data from ${collectionName} for query: ${query}`);
   
   try {

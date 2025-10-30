@@ -51,7 +51,7 @@ app.post('/api/chat', async (req, res) => {
     console.log("Received message:", message);
     
     // Get relevant data based on the message
-    const relevantData = await retrieveRelevantData(db, message, "scoutingDataChamps");
+    const relevantData = await retrieveRelevantData(db, message, "scoutingDataThor");
     
     // Generate AI response
     const aiResponse = await generateAIResponse(message, relevantData);
@@ -519,7 +519,9 @@ IMPORTANT INSTRUCTIONS:
 - If specific match numbers are mentioned, focus on those match details.
 - If no data is available for a specific team or match, clearly state this limitation.
 - Keep your analysis concise but informative, focused on the question asked.
-- If asked about a team not in the data, explicitly state "There is no data available for Team X" rather than making up information.`;
+- If asked about a team not in the data, explicitly state "There is no data available for Team X" rather than making up information.
+- **ONLY REFERENCE THE DATA, DO NOT MAKE UP INFORMATION**
+`;
 
     // Fixed: Use the correct OpenAI API call syntax
     const response = await openai.createChatCompletion({
