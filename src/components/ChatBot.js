@@ -22,9 +22,11 @@ function ChatBot() {
     localStorage.setItem('chatHistory', JSON.stringify(messages));
   }, [messages]);
 
-  // Auto-scroll to bottom of messages
+  // Auto-scroll to bottom of messages (only within container, don't affect page scroll)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [messages]);
 
   // Simplify the formatMessage function to only handle headings
@@ -184,16 +186,30 @@ function ChatBot() {
         </div>
         
         <form onSubmit={handleSubmit} className="input-form">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about team performance, strategy, or match analysis..."
-            disabled={isLoading}
-          />
-          <button type="submit" disabled={isLoading || !input.trim()}>
-            Send
-          </button>
+          <div className="input-bubble">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about team performance, strategy, or match analysis..."
+              disabled={isLoading}
+            />
+            <button 
+              type="submit" 
+              disabled={isLoading || !input.trim()}
+              className="send-button-circle"
+              aria-label="Send message"
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+              >
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" transform="rotate(-90 12 12)"/>
+              </svg>
+            </button>
+          </div>
         </form>
       </div>
     </div>

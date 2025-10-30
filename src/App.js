@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import ScoutingForm from './components/ScoutingForm';
 import DataAnalysis from './components/DataAnalysis';
 import ChatBot from './components/ChatBot';
 import TestChat from './components/TestChat';
 import AdminTools from './components/AdminTools';
 import './App.css';
+
+// ScrollToTop component
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -81,6 +92,7 @@ function App() {
   // Main app content
   return (
     <Router>
+      <ScrollToTop />
       <div className="app">
         {isAuthenticated && (
           <div className="navbar-wrapper">
