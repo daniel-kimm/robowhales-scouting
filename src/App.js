@@ -83,27 +83,44 @@ function App() {
     <Router>
       <div className="app">
         {isAuthenticated && (
-          <header className="app-header">
-            <div className="app-header-left">
-              <h1 className="app-title">robowhales|9032</h1>
+          <div className="navbar-wrapper">
+            <div className="navbar-container">
+              {/* Logo */}
+              <Link to="/" className="navbar-logo">
+                <h1 className="app-title">robowhales|9032</h1>
+              </Link>
+
+              {/* Desktop Nav Links */}
+              <nav className="navbar-links">
+                <Link to="/" className="nav-link">Scouting Form</Link>
+                <Link to="/analysis" className="nav-link">Data Analysis</Link>
+                <Link to="/assistant" className="nav-link">Scout Assistant</Link>
+                <Link to="/admin" className="nav-link">Admin Tools</Link>
+              </nav>
+
+              {/* Mobile Hamburger */}
+              <button
+                className="nav-toggle"
+                aria-label="Toggle navigation menu"
+                aria-expanded={isNavOpen}
+                onClick={() => setIsNavOpen(!isNavOpen)}
+              >
+                <span className="bar" />
+                <span className="bar" />
+                <span className="bar" />
+              </button>
+
+              {/* Mobile Dropdown */}
+              {isNavOpen && (
+                <div className="mobile-nav-dropdown" onClick={() => setIsNavOpen(false)}>
+                  <Link to="/" className="mobile-nav-link">Scouting Form</Link>
+                  <Link to="/analysis" className="mobile-nav-link">Data Analysis</Link>
+                  <Link to="/assistant" className="mobile-nav-link">Scout Assistant</Link>
+                  <Link to="/admin" className="mobile-nav-link">Admin Tools</Link>
+                </div>
+              )}
             </div>
-            <button
-              className="nav-toggle"
-              aria-label="Toggle navigation menu"
-              aria-expanded={isNavOpen}
-              onClick={() => setIsNavOpen(!isNavOpen)}
-            >
-              <span className="bar" />
-              <span className="bar" />
-              <span className="bar" />
-            </button>
-            <nav className={`app-nav ${isNavOpen ? 'open' : ''}`} onClick={() => setIsNavOpen(false)}>
-              <Link to="/">Scouting Form</Link>
-              <Link to="/analysis">Data Analysis</Link>
-              <Link to="/assistant">Scout Assistant</Link>
-              <Link to="/admin">Admin Tools</Link>
-            </nav>
-          </header>
+          </div>
         )}
         
         <main>

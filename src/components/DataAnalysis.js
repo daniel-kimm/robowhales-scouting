@@ -180,7 +180,7 @@ function DataAnalysis() {
 
   return (
     <div className="container">
-      <h2>Team Performance Analysis</h2>
+      <h1>Team Performance Analysis</h1>
       
       <div className="filters">
         <h3>Filters</h3>

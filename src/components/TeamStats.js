@@ -36,7 +36,7 @@ function TeamStats({ matches }) {
   if (!matches || matches.length === 0) {
     return (
       <div className="team-stats">
-        <h3>Team Statistics</h3>
+        <h2>Team Statistics</h2>
         <p>No data available</p>
       </div>
     );
@@ -317,7 +317,6 @@ function TeamStats({ matches }) {
 
   return (
     <div className="team-stats">
-      <h3>Team Statistics</h3>
       
       {/* Offensive Chart Filters */}
       <div className="chart-filters">
@@ -363,13 +362,13 @@ function TeamStats({ matches }) {
       
       {/* Offensive Chart */}
       <div className="chart-container">
-        <h4>Offensive Performance</h4>
+        <h2>Offensive Performance</h2>
         <Bar data={offensiveChartData} options={chartOptions} />
       </div>
       
       {/* Defensive Chart */}
       <div className="chart-container">
-        <h4>Defensive Performance</h4>
+        <h2>Defensive Performance</h2>
         <Bar data={defensiveChartData} options={defenseChartOptions} />
       </div>
       
