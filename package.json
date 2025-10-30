@@ -26,13 +26,12 @@
   },
   "proxy": "http://localhost:3002",
   "scripts": {
-    "start": "node server.js",
-    "server": "node simple-server.js",
-    "client": "react-scripts start",
-    "dev": "nodemon server.js",
-    "test": "node test-server.js",
+    "start": "react-scripts start",
+    "dev": "react-scripts start",
     "build": "CI=false react-scripts build",
-    "vercel-build": "CI=false npm run build"
+    "test": "react-scripts test",
+    "vercel-build": "CI=false npm run build",
+    "vercel-dev": "vercel dev"
   },
   "eslintConfig": {
     "extends": [

@@ -99,7 +99,8 @@ function App() {
             <div className="navbar-container">
               {/* Logo */}
               <Link to="/" className="navbar-logo">
-                <h1 className="app-title">robowhales|9032</h1>
+                <img src="/RoboWhalesLOGO.png" alt="RoboWhales Logo" className="navbar-logo-img" />
+                <h1 className="app-title">9032</h1>
               </Link>
 
               {/* Desktop Nav Links */}
