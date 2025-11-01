@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 function PasswordProtection({ onPasswordSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const correctPassword = '***REMOVED***';
+  const correctPassword = process.env.REACT_APP_PASSWORD;
   
   useEffect(() => {
     console.log("PasswordProtection component mounted");

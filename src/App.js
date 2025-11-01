@@ -23,7 +23,7 @@ function App() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const correctPassword = '***REMOVED***';
+  const correctPassword = process.env.REACT_APP_PASSWORD;
   
   useEffect(() => {
     // Check if user is already authenticated
