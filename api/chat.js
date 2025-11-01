@@ -103,13 +103,14 @@ export default async function handler(req, res) {
 }
 
 function summarizeDataForAI(relevantData) {
-  // Drastically reduce data size by computing averages and summaries
   const summarized = {
     teams: {},
     totalMatches: relevantData.matches.length
   };
   
-  // For each team, calculate aggregate statistics
+  // Calculate team averages for ranking
+  const teamRankings = [];
+  
   Object.entries(relevantData.teams).forEach(([teamNum, teamData]) => {
     const matches = teamData.matches || [];
     const matchCount = matches.length;
@@ -131,30 +132,48 @@ function summarizeDataForAI(relevantData) {
       return acc;
     }, { auto: 0, teleop: 0, endgame: 0, total: 0, coralL4: 0, algae: 0, deepClimbs: 0, shallowClimbs: 0, parks: 0 });
     
-    summarized.teams[teamNum] = {
-      teamNumber: teamNum,
-      matchesPlayed: matchCount,
+    const avgTotal = totals.total / matchCount;
+    teamRankings.push({ teamNum, avgTotal, matches, totals, matchCount });
+  });
+  
+  // Sort teams by average score (best first)
+  teamRankings.sort((a, b) => b.avgTotal - a.avgTotal);
+  
+  // Include full details for top 10 teams, summaries for others
+  teamRankings.forEach((team, index) => {
+    const isTopTeam = index < 10;
+    
+    summarized.teams[team.teamNum] = {
+      teamNumber: team.teamNum,
+      matchesPlayed: team.matchCount,
       averages: {
-        autoPoints: (totals.auto / matchCount).toFixed(1),
-        teleopPoints: (totals.teleop / matchCount).toFixed(1),
-        endgamePoints: (totals.endgame / matchCount).toFixed(1),
-        totalPoints: (totals.total / matchCount).toFixed(1),
-        coralLevel4PerMatch: (totals.coralL4 / matchCount).toFixed(1),
-        algaePerMatch: (totals.algae / matchCount).toFixed(1)
+        autoPoints: (team.totals.auto / team.matchCount).toFixed(1),
+        teleopPoints: (team.totals.teleop / team.matchCount).toFixed(1),
+        endgamePoints: (team.totals.endgame / team.matchCount).toFixed(1),
+        totalPoints: team.avgTotal.toFixed(1),
+        coralLevel4PerMatch: (team.totals.coralL4 / team.matchCount).toFixed(1),
+        algaePerMatch: (team.totals.algae / team.matchCount).toFixed(1)
       },
       endgameStats: {
-        deepClimbs: totals.deepClimbs,
-        shallowClimbs: totals.shallowClimbs,
-        parks: totals.parks,
-        deepClimbRate: ((totals.deepClimbs / matchCount) * 100).toFixed(0) + '%',
-        climbRate: (((totals.deepClimbs + totals.shallowClimbs) / matchCount) * 100).toFixed(0) + '%'
-      },
-      // Only include high-level match context
-      bestPerformance: {
-        matchNumber: matches.reduce((best, m) => (m.scores?.totalPoints || 0) > (best.scores?.totalPoints || 0) ? m : best, matches[0]).matchInfo?.matchNumber,
-        score: Math.max(...matches.map(m => m.scores?.totalPoints || 0))
+        deepClimbs: team.totals.deepClimbs,
+        shallowClimbs: team.totals.shallowClimbs,
+        parks: team.totals.parks,
+        climbRate: (((team.totals.deepClimbs + team.totals.shallowClimbs) / team.matchCount) * 100).toFixed(0) + '%'
       }
     };
+    
+    // For top 10 teams, include recent match details with notes
+    if (isTopTeam) {
+      const recentMatches = team.matches.slice(-3).map(m => ({
+        match: m.matchInfo?.matchNumber,
+        scores: m.scores,
+        notes: m.additional?.notes || null
+      })).filter(m => m.notes || m.scores?.totalPoints > 15); // Only include if has notes OR scored well
+      
+      if (recentMatches.length > 0) {
+        summarized.teams[team.teamNum].recentMatches = recentMatches;
+      }
+    }
   });
   
   return summarized;
@@ -191,7 +210,7 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
       Here is the summarized scouting data with averages and key statistics:
       ${formattedData}
       
-      Note: Data includes averages across all matches, climb rates, and best performance score for each team.
+      Note: All teams include averages and climb stats. Top 10 teams by performance also include recent match details with scouter notes for additional context.
     `;
     
     // Format conversation history for the API - limit history
@@ -212,8 +231,7 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
       model: "gpt-4o-mini",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 800,
-      request_timeout: 6000 // 6 second timeout for OpenAI
+      max_tokens: 800
     });
     
     return response.data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
