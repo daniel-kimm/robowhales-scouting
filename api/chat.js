@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     
     // Retrieve relevant data based on the user's query
     console.log("Retrieving data for query:", message);
-    const relevantData = await retrieveRelevantData(message, db);
+    const relevantData = await retrieveRelevantData(db, message, "scoutingDataThor");
     console.log("Retrieved data for teams:", Object.keys(relevantData.teams));
     
     // Generate a response using OpenAI
