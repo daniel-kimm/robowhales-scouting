@@ -376,14 +376,30 @@ button:hover {
 .submit-btn {
   margin-top: 20px;
   width: 100%;
-  padding: 12px;
-  font-size: 18px;
-  background-color: #0066cc;
-  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  background-color: hsl(222.2, 47.4%, 11.2%);
+  color: hsl(210, 40%, 98%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .submit-btn:hover {
-  background-color: #0052a3;
+  background-color: hsl(222.2, 47.4%, 16%);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Counter Component */
@@ -609,6 +625,24 @@ tr:hover {
 
 .filters button {
   margin-right: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: white;
+  color: hsl(222.2, 47.4%, 11.2%);
+  border: 1px solid hsl(214.3, 31.8%, 91.4%);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filters button:hover {
+  background-color: hsl(210, 40%, 96.1%);
+  border-color: hsl(214.3, 31.8%, 85%);
+}
+
+.filters button:active {
+  transform: scale(0.98);
 }
 
 /* Team Stats Cards Container */
