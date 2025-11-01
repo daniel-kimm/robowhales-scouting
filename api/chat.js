@@ -149,9 +149,11 @@ function summarizeDataForAI(relevantData) {
         deepClimbRate: ((totals.deepClimbs / matchCount) * 100).toFixed(0) + '%',
         climbRate: (((totals.deepClimbs + totals.shallowClimbs) / matchCount) * 100).toFixed(0) + '%'
       },
-      // Include only the best and most recent match for context
-      bestMatch: matches.reduce((best, m) => (m.scores?.totalPoints || 0) > (best.scores?.totalPoints || 0) ? m : best, matches[0]),
-      recentMatch: matches[matches.length - 1]
+      // Only include high-level match context
+      bestPerformance: {
+        matchNumber: matches.reduce((best, m) => (m.scores?.totalPoints || 0) > (best.scores?.totalPoints || 0) ? m : best, matches[0]).matchInfo?.matchNumber,
+        score: Math.max(...matches.map(m => m.scores?.totalPoints || 0))
+      }
     };
   });
   
@@ -189,7 +191,7 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
       Here is the summarized scouting data with averages and key statistics:
       ${formattedData}
       
-      Note: Data includes averages across all matches, climb rates, and best/recent performances for context.
+      Note: Data includes averages across all matches, climb rates, and best performance score for each team.
     `;
     
     // Format conversation history for the API - limit history
