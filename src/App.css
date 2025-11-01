@@ -356,7 +356,52 @@ textarea {
 }
 
 input[type="checkbox"] {
-  margin-right: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid hsl(214.3, 31.8%, 91.4%);
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  position: relative;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  vertical-align: -7px;
+  display: inline-block;
+}
+
+input[type="checkbox"]:hover {
+  border-color: hsl(222.2, 47.4%, 11.2%);
+  box-shadow: 0 0 0 3px hsla(222.2, 47.4%, 11.2%, 0.08);
+}
+
+input[type="checkbox"]:checked {
+  background-color: hsl(222.2, 47.4%, 11.2%);
+  border-color: hsl(222.2, 47.4%, 11.2%);
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px hsla(222.2, 47.4%, 11.2%, 0.15);
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 button {
@@ -761,15 +806,89 @@ select.full-width {
   font-weight: normal;
 }
 
-.checkbox-group input[type="checkbox"] {
-  margin-right: 8px;
-}
+/* Checkbox styling already defined globally above */
 
-/* Range Slider Styling */
+/* Range Slider Styling - Shadcn UI inspired */
 input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   max-width: 300px;
   margin-right: 10px;
+  height: 6px;
+  background: hsl(214.3, 31.8%, 91.4%);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]:hover {
+  background: hsl(214.3, 31.8%, 88%);
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: hsl(222.2, 47.4%, 11.2%);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: hsl(222.2, 47.4%, 16%);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.25);
+  transform: scale(1.1);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  box-shadow: 0 0 0 4px hsla(222.2, 47.4%, 11.2%, 0.15);
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: hsl(222.2, 47.4%, 11.2%);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: hsl(222.2, 47.4%, 16%);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.25);
+  transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb:active {
+  box-shadow: 0 0 0 4px hsla(222.2, 47.4%, 11.2%, 0.15);
+}
+
+input[type="range"]::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+
+/* Focus state */
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px hsla(222.2, 47.4%, 11.2%, 0.15);
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 4px hsla(222.2, 47.4%, 11.2%, 0.15);
 }
 
 /* Make sure textarea is full width */

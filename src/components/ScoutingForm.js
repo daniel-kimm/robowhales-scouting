@@ -605,6 +605,9 @@ function ScoutingForm() {
                   max="10" 
                   value={formData.additional.defenseRating}
                   onChange={(e) => handleInputChange('additional', 'defenseRating', parseInt(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, hsl(222.2, 47.4%, 11.2%) 0%, hsl(222.2, 47.4%, 11.2%) ${((formData.additional.defenseRating - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) ${((formData.additional.defenseRating - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) 100%)`
+                  }}
                 />
                 <span style={{ marginLeft: '10px' }}>{formData.additional.defenseRating}</span>
               </div>
@@ -621,6 +624,9 @@ function ScoutingForm() {
                 max="10" 
                 value={formData.additional.driverSkill}
                 onChange={(e) => handleInputChange('additional', 'driverSkill', parseInt(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, hsl(222.2, 47.4%, 11.2%) 0%, hsl(222.2, 47.4%, 11.2%) ${((formData.additional.driverSkill - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) ${((formData.additional.driverSkill - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) 100%)`
+                }}
               />
               <span style={{ marginLeft: '10px' }}>{formData.additional.driverSkill}</span>
             </div>
@@ -636,6 +642,9 @@ function ScoutingForm() {
                 max="10" 
                 value={formData.additional.robotSpeed}
                 onChange={(e) => handleInputChange('additional', 'robotSpeed', parseInt(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, hsl(222.2, 47.4%, 11.2%) 0%, hsl(222.2, 47.4%, 11.2%) ${((formData.additional.robotSpeed - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) ${((formData.additional.robotSpeed - 1) / 9) * 100}%, hsl(214.3, 31.8%, 91.4%) 100%)`
+                }}
               />
               <span style={{ marginLeft: '10px' }}>{formData.additional.robotSpeed}</span>
             </div>

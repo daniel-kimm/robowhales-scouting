@@ -103,9 +103,7 @@
   font-weight: 500;
 }
 
-.option-toggle input[type="checkbox"] {
-  margin-right: 8px;
-}
+/* Checkbox styling inherited from global App.css */
 
 .primary-button {
   background-color: hsl(222.2, 47.4%, 11.2%);
