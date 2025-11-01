@@ -86,16 +86,25 @@ function ChatBot() {
       
       if (!response.ok) {
         let errorMessage = 'API request failed';
+        let isTimeout = false;
         
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
+          isTimeout = errorData.timeout || response.status === 504;
           console.error("API error details:", errorData);
         } catch (e) {
           console.error("Couldn't parse error response:", e);
+          // If it's a 504, it's definitely a timeout
+          if (response.status === 504) {
+            errorMessage = 'Request timed out. The chatbot is processing too much data. Try asking a more specific question about specific teams or matches.';
+            isTimeout = true;
+          }
         }
         
-        throw new Error(errorMessage);
+        const error = new Error(errorMessage);
+        error.isTimeout = isTimeout;
+        throw error;
       }
       
       const data = await response.json();
@@ -112,10 +121,18 @@ function ChatBot() {
       console.error('Error in chat:', error);
       setError(error.message || 'An unknown error occurred');
       
-      // Add error message to chat
+      // Add error message to chat with helpful context
+      let errorContent = `Sorry, I encountered an error: ${error.message}.`;
+      
+      if (error.isTimeout) {
+        errorContent = `⏱️ ${error.message}\n\nTip: Try asking about specific teams (e.g., "Tell me about team 9032") or specific matches (e.g., "What happened in match 5?") instead of general questions.`;
+      } else {
+        errorContent += ' Please try again later.';
+      }
+      
       const errorMessage = { 
         role: 'assistant', 
-        content: `Sorry, I encountered an error: ${error.message}. Please try again later.`
+        content: errorContent
       };
       
       setMessages(prev => [...prev, errorMessage]);

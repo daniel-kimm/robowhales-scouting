@@ -183,7 +183,7 @@ function DataAnalysis() {
       <h1>Team Performance Analysis</h1>
       
       <div className="filters">
-        <h3>Filters</h3>
+        <h2>Filters</h2>
         <div className="form-group">
           <label htmlFor="teamFilter">Team Number:</label>
           <input 
@@ -201,7 +201,7 @@ function DataAnalysis() {
       
       <TeamStats matches={filteredData} />
       
-      <h3>Match History</h3>
+      <h2>Match History</h2>
       <MatchTable matches={filteredData} onMatchUpdated={fetchData} />
       
       {/* New export button */}

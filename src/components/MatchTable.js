@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase.client.js';
-import { Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
+import { Pencil, Trash2, X, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
   const [selectedMatchDetails, setSelectedMatchDetails] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedMatch, setEditedMatch] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [expandedMatches, setExpandedMatches] = useState({});
   
   // Sort matches by match number (ascending)
   const sortedMatches = [...matches].sort((a, b) => {
@@ -15,6 +16,24 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
     const matchNumB = parseInt(b.matchInfo?.matchNumber || '0');
     return matchNumA - matchNumB;
   });
+
+  // Group matches by match number
+  const groupedMatches = sortedMatches.reduce((acc, match) => {
+    const matchNum = match.matchInfo?.matchNumber || 'Unknown';
+    if (!acc[matchNum]) {
+      acc[matchNum] = [];
+    }
+    acc[matchNum].push(match);
+    return acc;
+  }, {});
+
+  // Toggle match group expansion
+  const toggleMatchExpansion = (matchNum) => {
+    setExpandedMatches(prev => ({
+      ...prev,
+      [matchNum]: !prev[matchNum]
+    }));
+  };
   
   const handleRowClick = (match) => {
     if (onSelectMatch) {
@@ -235,40 +254,64 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
 
   return (
     <div className="match-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Match</th>
-            <th>Team</th>
-            <th>Alliance</th>
-            <th>Scouter</th>
-            <th>Auto</th>
-            <th>Teleop</th>
-            <th>Endgame</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedMatches.map((match) => (
-            <tr 
-              key={match.id} 
-              onClick={() => handleRowClick(match)}
-              className="match-row"
-            >
-              <td>{match.matchInfo?.matchNumber || 'N/A'}</td>
-              <td>{match.matchInfo?.teamNumber || 'N/A'}</td>
-              <td className={match.matchInfo?.alliance || 'unknown'}>
-                {match.matchInfo?.alliance || 'Unknown'}
-              </td>
-              <td>{match.matchInfo?.scouterInitials || '—'}</td>
-              <td>{match.scores?.autoPoints || 0}</td>
-              <td>{match.scores?.teleopPoints || 0}</td>
-              <td>{match.scores?.bargePoints || 0}</td>
-              <td>{match.scores?.totalPoints || 0}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="match-groups">
+        {Object.entries(groupedMatches).map(([matchNum, matchGroup]) => {
+          const isExpanded = expandedMatches[matchNum];
+          const matchCount = matchGroup.length;
+          
+          return (
+            <div key={matchNum} className="match-group">
+              <div 
+                className="match-group-header"
+                onClick={() => toggleMatchExpansion(matchNum)}
+              >
+                <div className="match-group-title">
+                  {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                  <span className="match-number">Match {matchNum}</span>
+                  <span className="team-count">({matchCount} {matchCount === 1 ? 'team' : 'teams'})</span>
+                </div>
+              </div>
+              
+              {isExpanded && (
+                <div className="match-group-table-wrapper">
+                  <table className="match-group-table">
+                    <thead>
+                      <tr>
+                        <th>Team</th>
+                        <th>Alliance</th>
+                        <th>Scouter</th>
+                        <th>Auto</th>
+                        <th>Teleop</th>
+                        <th>Endgame</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {matchGroup.map((match) => (
+                        <tr 
+                          key={match.id} 
+                          onClick={() => handleRowClick(match)}
+                          className="match-row"
+                        >
+                          <td>{match.matchInfo?.teamNumber || 'N/A'}</td>
+                          <td className={match.matchInfo?.alliance || 'unknown'}>
+                            {match.matchInfo?.alliance || 'Unknown'}
+                          </td>
+                          <td>{match.matchInfo?.scouterInitials || '—'}</td>
+                          <td>{match.scores?.autoPoints || 0}</td>
+                          <td>{match.scores?.teleopPoints || 0}</td>
+                          <td>{match.scores?.bargePoints || 0}</td>
+                          <td>{match.scores?.totalPoints || 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
       
       {/* Match Details Modal */}
       {selectedMatchDetails && (
