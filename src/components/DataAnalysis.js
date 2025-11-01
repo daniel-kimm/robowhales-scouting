@@ -11,34 +11,34 @@ function DataAnalysis() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Load data from Firestore
-    const fetchData = async () => {
-      try {
-        console.log("Fetching data from Firestore...");
-        
-        // Changed collection name from "scoutingDataDCMP" to "scoutingDataThor"
-        const scoutingSnapshot = await getDocs(collection(db, "scoutingDataThor"));
-        
-        console.log("Data received:", scoutingSnapshot.size, "documents");
-        const data = [];
-        scoutingSnapshot.forEach((doc) => {
-          const docData = doc.data();
-          console.log("Document data:", docData);
-          data.push({ id: doc.id, ...docData });
-        });
-        console.log("Processed data:", data);
-        
-        setScoutingData(data);
-        setFilteredData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        setError(error.message);
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      console.log("Fetching data from Firestore...");
+      setLoading(true);
+      
+      // Changed collection name from "scoutingDataDCMP" to "scoutingDataThor"
+      const scoutingSnapshot = await getDocs(collection(db, "scoutingDataThor"));
+      
+      console.log("Data received:", scoutingSnapshot.size, "documents");
+      const data = [];
+      scoutingSnapshot.forEach((doc) => {
+        const docData = doc.data();
+        console.log("Document data:", docData);
+        data.push({ id: doc.id, ...docData });
+      });
+      console.log("Processed data:", data);
+      
+      setScoutingData(data);
+      setFilteredData(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -202,7 +202,7 @@ function DataAnalysis() {
       <TeamStats matches={filteredData} />
       
       <h3>Match History</h3>
-      <MatchTable matches={filteredData} />
+      <MatchTable matches={filteredData} onMatchUpdated={fetchData} />
       
       {/* New export button */}
       {filteredData.length > 0 && (

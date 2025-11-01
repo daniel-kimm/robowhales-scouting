@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { X } from 'lucide-react';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -423,7 +424,9 @@ function TeamStats({ matches }) {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Team {selectedTeam.teamNumber} Detailed Stats</h2>
-              <button className="modal-close" onClick={closeModal}>×</button>
+              <button className="modal-close" onClick={closeModal}>
+                <X size={20} />
+              </button>
             </div>
             
             <div className="modal-body">
