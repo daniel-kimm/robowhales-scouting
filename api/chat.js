@@ -219,6 +219,10 @@ async function generateAIResponse(message, relevantData, conversationHistory) {
     return response.data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
   } catch (error) {
     console.error('OpenAI API error:', error);
+    // Log the actual error response from OpenAI
+    if (error.response?.data) {
+      console.error('OpenAI error details:', JSON.stringify(error.response.data, null, 2));
+    }
     throw new Error('Failed to generate AI response: ' + error.message);
   }
 } 
