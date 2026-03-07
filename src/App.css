@@ -559,36 +559,42 @@ button:hover {
   border: 1px solid #e2e8f0;
 }
 
-.extended-counter .counter-label {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #1e293b;
-}
-
-.extended-counter-controls {
+.ext-counter-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.extended-counter .counter-label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0;
 }
 
 .ext-counter-value {
-  min-width: 48px;
+  min-width: 52px;
   text-align: center;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #0f172a;
-  padding: 4px 8px;
+  padding: 4px 12px;
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 6px;
 }
 
+.extended-counter-controls {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
 .ext-btn {
-  height: 40px;
-  min-width: 40px;
-  padding: 0 10px;
+  height: 44px;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: white;
@@ -1133,15 +1139,8 @@ textarea.full-width {
   }
 
   .ext-btn {
-    height: 36px;
-    min-width: 36px;
-    padding: 0 6px;
-    font-size: 0.75rem;
-  }
-
-  .ext-counter-value {
-    min-width: 40px;
-    font-size: 1.1rem;
+    height: 48px;
+    font-size: 0.9rem;
   }
 
   .radio-group {
