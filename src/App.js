@@ -112,6 +112,7 @@ function App() {
 
               {/* Mobile Hamburger */}
               <button
+                type="button"
                 className="nav-toggle"
                 aria-label="Toggle navigation menu"
                 aria-expanded={isNavOpen}

@@ -80,6 +80,9 @@ h6 {
 body {
   font-family: "Instrument Sans", sans-serif !important;
   line-height: 1.6;
+  background: linear-gradient(160deg, #f0f2f8 0%, #e8ecf4 30%, #f5f0ee 60%, #eef0f6 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Update button styling to match RoboWhales branding */
@@ -97,7 +100,7 @@ button {
   font-family: "Instrument Sans", sans-serif !important;
 }
 
-/* Glassmorphic Navbar */
+/* Liquid Glass Navbar */
 .navbar-wrapper {
   width: 100%;
   padding: 8px;
@@ -118,18 +121,69 @@ button {
   margin: 8px auto 0;
   padding: 0 24px;
   height: 64px;
-  border-radius: 16px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: rgba(147, 170, 217, 0.5);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.5);
   position: relative;
   box-sizing: border-box;
+  backdrop-filter: blur(50px) saturate(2) brightness(1.05);
+  -webkit-backdrop-filter: blur(50px) saturate(2) brightness(1.05);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(240, 242, 248, 0.35) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+/* Top specular sheen — light catching the curved glass surface */
+.navbar-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.15) 40%,
+    transparent 55%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle edge highlight ring */
+.navbar-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  padding: 1px;
+  background: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.2) 25%,
+    rgba(200, 210, 230, 0.1) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .navbar-logo {
@@ -168,16 +222,19 @@ button {
 }
 
 .nav-link {
-  color: #333;
+  color: rgba(0, 0, 0, 0.75);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
+  padding: 6px 12px;
+  border-radius: 10px;
 }
 
 .nav-link:hover {
-  color: #0066cc;
+  color: rgba(0, 0, 0, 0.95);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Hamburger button */
@@ -193,7 +250,7 @@ button {
   display: block;
   width: 22px;
   height: 2px;
-  background-color: #333;
+  background-color: rgba(0, 0, 0, 0.7);
   margin: 5px 0;
   transition: background-color 0.2s ease;
 }
@@ -214,35 +271,44 @@ button {
 /* Mobile Navigation */
 .mobile-nav-dropdown {
   position: absolute;
-  top: 72px;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 8px;
+  top: 64px;
+  right: 12px;
+  backdrop-filter: blur(50px) saturate(2) brightness(1.05);
+  -webkit-backdrop-filter: blur(50px) saturate(2) brightness(1.05);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(245, 246, 250, 0.82) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.03),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   z-index: 1000;
   min-width: 180px;
 }
 
 .mobile-nav-link {
-  color: #333;
+  color: rgba(0, 0, 0, 0.75);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
   transition: background 0.2s, color 0.2s;
 }
 
 .mobile-nav-link:hover {
-  background: rgba(0, 102, 204, 0.1);
-  color: #0066cc;
+  background: rgba(255, 255, 255, 0.35);
+  color: rgba(0, 0, 0, 0.95);
 }
 
 @media (max-width: 768px) {
@@ -262,7 +328,14 @@ button {
     padding: 0 16px;
     height: 56px;
     max-width: 100%;
-    margin: 8px 0 0;
+    margin: 4px 0 0;
+    border-radius: 18px;
+  }
+  .navbar-container::before {
+    border-radius: 18px;
+  }
+  .navbar-container::after {
+    border-radius: 18px 18px 50% 50%;
   }
 
   .nav-toggle {
