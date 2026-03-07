@@ -107,7 +107,6 @@ function App() {
               <nav className="navbar-links">
                 <Link to="/" className="nav-link">Scouting Form</Link>
                 <Link to="/analysis" className="nav-link">Data Analysis</Link>
-                <Link to="/assistant" className="nav-link">Scout Assistant</Link>
                 <Link to="/admin" className="nav-link">Admin Tools</Link>
               </nav>
 
@@ -128,7 +127,6 @@ function App() {
                 <div className="mobile-nav-dropdown" onClick={() => setIsNavOpen(false)}>
                   <Link to="/" className="mobile-nav-link">Scouting Form</Link>
                   <Link to="/analysis" className="mobile-nav-link">Data Analysis</Link>
-                  <Link to="/assistant" className="mobile-nav-link">Scout Assistant</Link>
                   <Link to="/admin" className="mobile-nav-link">Admin Tools</Link>
                 </div>
               )}

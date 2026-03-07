@@ -548,6 +548,155 @@ button:hover {
   text-align: center;
 }
 
+/* Extended Counter Component */
+.extended-counter {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  padding: 12px 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.extended-counter .counter-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1e293b;
+}
+
+.extended-counter-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ext-counter-value {
+  min-width: 48px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 4px 8px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.ext-btn {
+  height: 40px;
+  min-width: 40px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ext-btn:active {
+  transform: scale(0.93);
+}
+
+.ext-btn.ext-dec-lg {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.ext-btn.ext-dec-lg:hover {
+  background-color: #fee2e2;
+}
+
+.ext-btn.ext-dec-md {
+  background-color: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+.ext-btn.ext-dec-md:hover {
+  background-color: #ffedd5;
+}
+
+.ext-btn.ext-dec {
+  background-color: #fefce8;
+  border-color: #fde68a;
+  color: #a16207;
+}
+.ext-btn.ext-dec:hover {
+  background-color: #fef9c3;
+}
+
+.ext-btn.ext-inc {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+.ext-btn.ext-inc:hover {
+  background-color: #dcfce7;
+}
+
+.ext-btn.ext-inc-md {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+.ext-btn.ext-inc-md:hover {
+  background-color: #dbeafe;
+}
+
+.ext-btn.ext-inc-lg {
+  background-color: #f5f3ff;
+  border-color: #c4b5fd;
+  color: #6d28d9;
+}
+.ext-btn.ext-inc-lg:hover {
+  background-color: #ede9fe;
+}
+
+/* Radio Group (multiple choice) */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  font-weight: 500;
+}
+
+.radio-option:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.radio-option input[type="radio"] {
+  accent-color: #0066cc;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+  background-color: #eff6ff;
+  border-color: #0066cc;
+}
+
 /* Table Styling */
 table {
   width: 100%;
@@ -978,6 +1127,31 @@ textarea.full-width {
     padding: 10px;
     font-size: 16px;
   }
+
+  .extended-counter-controls {
+    gap: 4px;
+  }
+
+  .ext-btn {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+  }
+
+  .ext-counter-value {
+    min-width: 40px;
+    font-size: 1.1rem;
+  }
+
+  .radio-group {
+    gap: 6px;
+  }
+
+  .radio-option {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Make wide tables scroll instead of overflowing viewport */
@@ -1110,6 +1284,10 @@ table {
 
 .filter-label {
   font-size: 14px;
+}
+
+.filter-label.total {
+  color: rgba(153, 102, 255, 1);
 }
 
 .filter-label.auto {
