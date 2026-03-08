@@ -222,19 +222,45 @@ button {
 }
 
 .nav-link {
-  color: rgba(0, 0, 0, 0.75);
+  color: rgba(0, 0, 0, 0.7);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.2s;
   padding: 6px 12px;
-  border-radius: 10px;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 
 .nav-link:hover {
   color: rgba(0, 0, 0, 0.95);
-  background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-link.active {
+  color: rgba(0, 0, 0, 0.95);
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  transform: scaleX(1);
 }
 
 /* Hamburger button */
@@ -297,18 +323,45 @@ button {
 }
 
 .mobile-nav-link {
-  color: rgba(0, 0, 0, 0.75);
+  color: rgba(0, 0, 0, 0.7);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   padding: 10px 14px;
   border-radius: 10px;
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.mobile-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 
 .mobile-nav-link:hover {
-  background: rgba(255, 255, 255, 0.35);
   color: rgba(0, 0, 0, 0.95);
+}
+
+.mobile-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.mobile-nav-link.active {
+  color: rgba(0, 0, 0, 0.95);
+  font-weight: 600;
+}
+
+.mobile-nav-link.active::after {
+  transform: scaleX(1);
 }
 
 @media (max-width: 768px) {

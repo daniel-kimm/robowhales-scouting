@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
 import ScoutingForm from './components/ScoutingForm';
 import DataAnalysis from './components/DataAnalysis';
 import ChatBot from './components/ChatBot';
@@ -105,9 +105,9 @@ function App() {
 
               {/* Desktop Nav Links */}
               <nav className="navbar-links">
-                <Link to="/" className="nav-link">Scouting Form</Link>
-                <Link to="/analysis" className="nav-link">Data Analysis</Link>
-                <Link to="/admin" className="nav-link">Admin Tools</Link>
+                <NavLink to="/" end className="nav-link">Scouting Form</NavLink>
+                <NavLink to="/analysis" className="nav-link">Data Analysis</NavLink>
+                <NavLink to="/admin" className="nav-link">Admin Tools</NavLink>
               </nav>
 
               {/* Mobile Hamburger */}
@@ -126,9 +126,9 @@ function App() {
               {/* Mobile Dropdown */}
               {isNavOpen && (
                 <div className="mobile-nav-dropdown" onClick={() => setIsNavOpen(false)}>
-                  <Link to="/" className="mobile-nav-link">Scouting Form</Link>
-                  <Link to="/analysis" className="mobile-nav-link">Data Analysis</Link>
-                  <Link to="/admin" className="mobile-nav-link">Admin Tools</Link>
+                  <NavLink to="/" end className="mobile-nav-link">Scouting Form</NavLink>
+                  <NavLink to="/analysis" className="mobile-nav-link">Data Analysis</NavLink>
+                  <NavLink to="/admin" className="mobile-nav-link">Admin Tools</NavLink>
                 </div>
               )}
             </div>
