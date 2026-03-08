@@ -1241,7 +1241,6 @@ textarea.full-width {
   }
 
   .password-container .app-title {
-    font-size: 1.5rem;
     margin: 8px 0;
   }
 
@@ -1303,19 +1302,22 @@ table {
 /* Password page title styling — keep BladeRunner */
 .password-container .app-title {
   font-family: "BladeRunner", sans-serif !important;
-  font-size: 2rem; /* Smaller than the main title */
+  font-size: clamp(1.1rem, 5vw, 2rem);
   text-transform: none;
-  color: #333; /* Dark gray/black color to match header */
+  color: #333;
   text-align: center;
   margin: 10px 0;
   letter-spacing: 2px;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .password-container h2 {
   margin-top: 0;
   margin-bottom: 20px;
   color: #0066cc;
-  font-size: 2rem;
+  font-size: clamp(1.3rem, 5vw, 2rem);
   font-weight: 600;
 }
 
