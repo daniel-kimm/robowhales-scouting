@@ -3,17 +3,27 @@ import React, { useState } from 'react';
 function PasswordProtection({ onPasswordSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const correctPassword = process.env.REACT_APP_PASSWORD;
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
-    if (password === correctPassword) {
-      localStorage.setItem('passwordAuthenticated', 'true');
-      onPasswordSuccess();
-      setError('');
-    } else {
-      setError('Incorrect password. Please try again.');
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      
+      if (data.success && data.token) {
+        localStorage.setItem('authToken', data.token);
+        onPasswordSuccess();
+      } else {
+        setError('Incorrect password. Please try again.');
+      }
+    } catch {
+      setError('Unable to connect. Please try again.');
     }
   };
   
@@ -47,4 +57,4 @@ function PasswordProtection({ onPasswordSuccess }) {
   );
 }
 
-export default PasswordProtection; 
+export default PasswordProtection;

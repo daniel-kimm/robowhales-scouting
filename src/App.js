@@ -23,26 +23,53 @@ function App() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const correctPassword = process.env.REACT_APP_PASSWORD;
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Check if user is already authenticated
-    const authenticated = localStorage.getItem('passwordAuthenticated') === 'true';
-    
-    if (authenticated) {
-      setIsAuthenticated(true);
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setIsLoading(false);
+      return;
     }
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', token })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.valid) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('authToken');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('authToken');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
   
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
-    if (password === correctPassword) {
-      localStorage.setItem('passwordAuthenticated', 'true');
-      setIsAuthenticated(true);
-      setError('');
-    } else {
-      setError('Incorrect password. Please try again.');
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      
+      if (data.success && data.token) {
+        localStorage.setItem('authToken', data.token);
+        setIsAuthenticated(true);
+      } else {
+        setError('Incorrect password. Please try again.');
+      }
+    } catch {
+      setError('Unable to connect. Please try again.');
     }
   };
   
@@ -76,8 +103,8 @@ function App() {
     </div>
   );
   
-  // Protected route component
   const ProtectedRoute = ({ element }) => {
+    if (isLoading) return <div className="container" style={{ textAlign: 'center', marginTop: '40px' }}>Loading...</div>;
     return isAuthenticated ? element : <PasswordProtection />;
   };
   
