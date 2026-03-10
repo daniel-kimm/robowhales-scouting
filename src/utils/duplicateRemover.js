@@ -1,4 +1,4 @@
-import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 /**
  * Detects and removes duplicate match entries from Firestore
@@ -19,7 +19,7 @@ export const removeDuplicateMatches = async (db, collectionName = "testData") =>
       });
     });
     
-    console.log(`Found ${matches.length} total matches in ${collectionName}`);
+    
     
     // Step 2: Group by team number + match number (our duplicate criteria)
     const matchGroups = {};
@@ -46,7 +46,7 @@ export const removeDuplicateMatches = async (db, collectionName = "testData") =>
     const deletedMatches = [];
     const skippedMatches = [];
     
-    for (const [matchKey, matchList] of Object.entries(matchGroups)) {
+    for (const [, matchList] of Object.entries(matchGroups)) {
       if (matchList.length > 1) {
         let actualDuplicatesInGroup = 0;
         const firstMatch = matchList[0];
@@ -54,9 +54,6 @@ export const removeDuplicateMatches = async (db, collectionName = "testData") =>
         for (let i = 1; i < matchList.length; i++) {
           try {
             const currentMatch = matchList[i];
-            console.log(`Checking potential duplicate: ${currentMatch.id}`);
-            
-            // Exact field-by-field comparison
             const isDuplicate = areMatchesIdentical(firstMatch, currentMatch);
             
             if (isDuplicate) {
@@ -68,7 +65,6 @@ export const removeDuplicateMatches = async (db, collectionName = "testData") =>
                 matchNumber: currentMatch.matchInfo?.matchNumber,
                 id: currentMatch.id
               });
-              console.log(`Deleted TRUE duplicate: ${matchKey} (ID: ${currentMatch.id})`);
             } else {
               const reasons = findDifferences(firstMatch, currentMatch);
               skippedMatches.push({
@@ -77,7 +73,6 @@ export const removeDuplicateMatches = async (db, collectionName = "testData") =>
                 id: currentMatch.id,
                 reason: `Different data: ${reasons.join(', ')}`
               });
-              console.log(`NOT a duplicate: ${currentMatch.id} - Differences: ${reasons.join(', ')}`);
             }
           } catch (error) {
             console.error(`Error processing match ${matchList[i].id}:`, error);

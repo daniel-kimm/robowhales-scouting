@@ -157,10 +157,13 @@ function TeamStats({ matches }) {
     const excessivePenaltiesPct = calculatePercentage(teamMatches, 'additional.excessivePenalties');
 
     const scouterNotes = teamMatches
-      .filter(match => match.additional?.notes)
+      .filter(match => match.additional?.onCycleNotes || match.additional?.offCycleNotes || match.additional?.generalNotes || match.additional?.notes)
       .map(match => ({
         matchNumber: match.matchInfo?.matchNumber || 'Unknown',
-        notes: match.additional?.notes,
+        onCycleNotes: match.additional?.onCycleNotes || '',
+        offCycleNotes: match.additional?.offCycleNotes || '',
+        generalNotes: match.additional?.generalNotes || '',
+        notes: match.additional?.notes || '',
         scouterInitials: match.matchInfo?.scouterInitials || 'Unknown'
       }));
 
@@ -554,9 +557,21 @@ function TeamStats({ matches }) {
                     <div className="notes-container">
                       {selectedTeam.scouterNotes.map((note, index) => (
                         <div key={index} className="note-item">
-                          <div className="note-match"><strong>Match {note.matchNumber}:</strong></div>
-                          <div className="note-text">{note.notes}</div>
-                          <div className="note-scouter">Scouted by: {note.scouterInitials}</div>
+                          <div className="note-match"><strong>Match {note.matchNumber}</strong> — Scouted by: {note.scouterInitials}</div>
+                          <div className="note-details">
+                            {note.onCycleNotes && (
+                              <div className="note-text"><strong>On Cycle:</strong> {note.onCycleNotes}</div>
+                            )}
+                            {note.offCycleNotes && (
+                              <div className="note-text"><strong>Off Cycle:</strong> {note.offCycleNotes}</div>
+                            )}
+                            {note.generalNotes && (
+                              <div className="note-text"><strong>General:</strong> {note.generalNotes}</div>
+                            )}
+                            {note.notes && !note.onCycleNotes && !note.offCycleNotes && !note.generalNotes && (
+                              <div className="note-text">{note.notes}</div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -39,7 +39,9 @@ function ScoutingForm() {
       makeGoodAlliancePartner: false,
       wasDefended: false,
       excessivePenalties: false,
-      notes: ''
+      onCycleNotes: '',
+      offCycleNotes: '',
+      generalNotes: ''
     }
   });
 
@@ -108,7 +110,9 @@ function ScoutingForm() {
         makeGoodAlliancePartner: false,
         wasDefended: false,
         excessivePenalties: false,
-        notes: ''
+        onCycleNotes: '',
+        offCycleNotes: '',
+        generalNotes: ''
       }
     });
   };
@@ -120,7 +124,6 @@ function ScoutingForm() {
       dataToSubmit.matchInfo.teamNumber = String(dataToSubmit.matchInfo.teamNumber);
 
       await addDoc(collection(db, "testData"), dataToSubmit);
-      console.log("Document successfully added to testData!");
     } catch (error) {
       console.error("Error adding document: ", error);
       throw error;
@@ -481,12 +484,34 @@ function ScoutingForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="notes">Notes:</label>
+            <label htmlFor="onCycleNotes">On Cycle Notes:</label>
             <textarea
-              id="notes"
+              id="onCycleNotes"
               rows="3"
-              value={formData.additional.notes}
-              onChange={(e) => handleInputChange('additional', 'notes', e.target.value)}
+              value={formData.additional.onCycleNotes}
+              onChange={(e) => handleInputChange('additional', 'onCycleNotes', e.target.value)}
+              className="full-width"
+            ></textarea>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="offCycleNotes">Off Cycle Notes:</label>
+            <textarea
+              id="offCycleNotes"
+              rows="3"
+              value={formData.additional.offCycleNotes}
+              onChange={(e) => handleInputChange('additional', 'offCycleNotes', e.target.value)}
+              className="full-width"
+            ></textarea>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="generalNotes">General Notes:</label>
+            <textarea
+              id="generalNotes"
+              rows="3"
+              value={formData.additional.generalNotes}
+              onChange={(e) => handleInputChange('additional', 'generalNotes', e.target.value)}
               className="full-width"
             ></textarea>
           </div>

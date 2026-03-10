@@ -13,19 +13,15 @@ function DataAnalysis() {
 
   const fetchData = async () => {
     try {
-      console.log("Fetching data from Firestore...");
       setLoading(true);
       
       const scoutingSnapshot = await getDocs(collection(db, "testData"));
       
-      console.log("Data received:", scoutingSnapshot.size, "documents");
       const data = [];
       scoutingSnapshot.forEach((doc) => {
         const docData = doc.data();
-        console.log("Document data:", docData);
         data.push({ id: doc.id, ...docData });
       });
-      console.log("Processed data:", data);
       
       setScoutingData(data);
       setFilteredData(data);
@@ -42,30 +38,21 @@ function DataAnalysis() {
   }, []);
 
   const applyFilters = () => {
-    console.log("Applying filter for team:", teamFilter);
-    console.log("Current data:", scoutingData);
-    
     let filtered = [...scoutingData];
     
     if (teamFilter && teamFilter.trim() !== '') {
       filtered = filtered.filter(match => {
-        // Skip if matchInfo or teamNumber is missing
         if (!match.matchInfo || !match.matchInfo.teamNumber) {
           return false;
         }
         
-        // Convert both to strings for comparison
         const matchTeamNumber = String(match.matchInfo.teamNumber).trim();
         const filterTeamNumber = String(teamFilter).trim();
         
-        console.log(`Comparing: "${matchTeamNumber}" with "${filterTeamNumber}"`);
-        
-        // Simple string equality
         return matchTeamNumber === filterTeamNumber;
       });
     }
     
-    console.log("Filtered data:", filtered);
     setFilteredData(filtered);
   };
 
@@ -74,50 +61,50 @@ function DataAnalysis() {
     setFilteredData(scoutingData);
   };
 
-  // Updated function to export notes organized by team number with scouter initials
   const exportNotesToFile = () => {
-    // Group notes by team number
     const notesByTeam = {};
     
     filteredData.forEach(match => {
       const teamNumber = match.matchInfo?.teamNumber || 'Unknown Team';
       const matchNumber = match.matchInfo?.matchNumber || 'Unknown Match';
-      const note = match.additional?.notes || '';
       const scouterInitials = match.matchInfo?.scouterInitials || match.scouterInitials || 'Unknown';
       
-      // Skip empty notes
-      if (!note.trim()) return;
+      const onCycle = match.additional?.onCycleNotes || '';
+      const offCycle = match.additional?.offCycleNotes || '';
+      const general = match.additional?.generalNotes || '';
+      const legacy = match.additional?.notes || '';
       
-      // Create team entry if it doesn't exist
+      const hasAnyNotes = onCycle.trim() || offCycle.trim() || general.trim() || legacy.trim();
+      if (!hasAnyNotes) return;
+      
       if (!notesByTeam[teamNumber]) {
         notesByTeam[teamNumber] = [];
       }
       
-      // Add this note to the team's collection with scouter initials
+      const lines = [`Match ${matchNumber} (${scouterInitials}):`];
+      if (onCycle.trim()) lines.push(`    On Cycle: ${onCycle}`);
+      if (offCycle.trim()) lines.push(`    Off Cycle: ${offCycle}`);
+      if (general.trim()) lines.push(`    General: ${general}`);
+      if (legacy.trim() && !onCycle.trim() && !offCycle.trim() && !general.trim()) {
+        lines.push(`    Notes: ${legacy}`);
+      }
+      
       notesByTeam[teamNumber].push({
         matchNumber,
-        note,
-        scouterInitials,
-        formatted: `Match ${matchNumber} (${scouterInitials}): ${note}`
+        formatted: lines.map(l => `  ${l}`).join('\n')
       });
     });
     
-    // Get sorted team numbers (convert to numbers for proper sorting)
     const sortedTeams = Object.keys(notesByTeam).sort((a, b) => {
-      // Handle 'Unknown Team' special case
       if (a === 'Unknown Team') return 1;
       if (b === 'Unknown Team') return -1;
-      
-      // Convert to numbers and compare
       return parseInt(a) - parseInt(b);
     });
     
-    // Build file content with team headers and indented notes
     const fileContent = sortedTeams.map(teamNumber => {
       const teamNotes = notesByTeam[teamNumber];
       const teamHeader = `Team ${teamNumber}:`;
-      const formattedNotes = teamNotes.map(entry => `  ${entry.formatted}`).join('\n');
-      
+      const formattedNotes = teamNotes.map(entry => entry.formatted).join('\n');
       return `${teamHeader}\n${formattedNotes}`;
     }).join('\n\n');
     

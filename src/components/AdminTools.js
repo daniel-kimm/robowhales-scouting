@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getFirestore, getDocs, collection } from 'firebase/firestore';
 import { removeDuplicateMatches } from '../utils/duplicateRemover';
 import './AdminTools.css';
-import { db } from '../firebase';
 
 function AdminTools() {
   const [loading, setLoading] = useState(false);
@@ -31,12 +30,8 @@ function AdminTools() {
       let stats;
       
       if (dryRun) {
-        // In dry run mode, we'll detect duplicates but not delete them
-        console.log("Starting DRY RUN duplicate detection");
         stats = await identifyDuplicates(db);
       } else {
-        // Only delete in non-dry-run mode
-        console.log("Starting LIVE duplicate deletion");
         stats = await removeDuplicateMatches(db);
       }
       
@@ -44,7 +39,6 @@ function AdminTools() {
         ...stats,
         dryRun
       });
-      console.log('Duplicate operation stats:', stats);
     } catch (err) {
       setError(err.message);
       console.error('Error in duplicate operation:', err);
@@ -90,7 +84,7 @@ function AdminTools() {
     const wouldDelete = [];
     const wouldSkip = [];
     
-    for (const [matchKey, matchList] of Object.entries(matchGroups)) {
+    for (const [, matchList] of Object.entries(matchGroups)) {
       if (matchList.length > 1) {
         let actualDuplicatesInGroup = 0;
         const firstMatch = matchList[0];

@@ -12,10 +12,7 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-console.log("Initializing Firebase in firebase.config.js...");
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-console.log("Firebase initialized successfully in firebase.config.js");
 
 module.exports = { app, db };

@@ -511,15 +511,48 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                   {/* Notes */}
                   <div className="match-detail-section notes">
                     <h3>Scouter Notes</h3>
-                    <div className="notes-container">
-                      {isEditing ? (
-                        renderField('additional', 'notes', 'textarea')
-                      ) : (
-                        selectedMatchDetails.additional?.notes ? (
-                          <div className="note-text">{selectedMatchDetails.additional.notes}</div>
-                        ) : (
-                          <p className="no-notes">No notes for this match.</p>
-                        )
+                    <div className="match-detail-grid">
+                      <div className="match-detail-item full-width-item">
+                        <div className="detail-label">On Cycle Notes:</div>
+                        <div className="detail-value">
+                          {isEditing ? (
+                            renderField('additional', 'onCycleNotes', 'textarea')
+                          ) : (
+                            selectedMatchDetails.additional?.onCycleNotes || <span className="no-notes">—</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="match-detail-item full-width-item">
+                        <div className="detail-label">Off Cycle Notes:</div>
+                        <div className="detail-value">
+                          {isEditing ? (
+                            renderField('additional', 'offCycleNotes', 'textarea')
+                          ) : (
+                            selectedMatchDetails.additional?.offCycleNotes || <span className="no-notes">—</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="match-detail-item full-width-item">
+                        <div className="detail-label">General Notes:</div>
+                        <div className="detail-value">
+                          {isEditing ? (
+                            renderField('additional', 'generalNotes', 'textarea')
+                          ) : (
+                            selectedMatchDetails.additional?.generalNotes || <span className="no-notes">—</span>
+                          )}
+                        </div>
+                      </div>
+                      {selectedMatchDetails.additional?.notes && !selectedMatchDetails.additional?.onCycleNotes && !selectedMatchDetails.additional?.offCycleNotes && !selectedMatchDetails.additional?.generalNotes && (
+                        <div className="match-detail-item full-width-item">
+                          <div className="detail-label">Notes (legacy):</div>
+                          <div className="detail-value">
+                            {isEditing ? (
+                              renderField('additional', 'notes', 'textarea')
+                            ) : (
+                              selectedMatchDetails.additional.notes
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>

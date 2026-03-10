@@ -1729,6 +1729,42 @@ table {
   border-left: 4px solid rgba(153, 102, 255, 0.8);
 }
 
+.detailed-section.notes {
+  background-color: rgba(100, 100, 100, 0.06);
+  border-left: 4px solid rgba(100, 100, 100, 0.4);
+  overflow: hidden;
+}
+
+.detailed-section.notes .note-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detailed-section.notes .note-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.detailed-section.notes .note-details {
+  padding-left: 20px;
+  margin-top: 4px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.detailed-section.notes .note-text {
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.detailed-section.notes .no-notes {
+  color: #888;
+  font-style: italic;
+}
+
 .detailed-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1740,6 +1776,9 @@ table {
   padding: 10px;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .detailed-label {
@@ -1751,6 +1790,8 @@ table {
 .detailed-value {
   font-size: 1.2rem;
   font-weight: bold;
+  overflow-wrap: break-word;
+  word-break: break-word;
   color: #333;
 }
 
@@ -1899,6 +1940,9 @@ table {
   background-color: white;
   padding: 10px;
   border-radius: 5px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1910,6 +1954,12 @@ table {
 
 .detail-value {
   font-size: 1.1rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.match-detail-item.full-width-item {
+  grid-column: 1 / -1;
 }
 
 .total-score {
@@ -1973,6 +2023,8 @@ table {
 .match-detail-section.notes .note-text {
   white-space: pre-wrap;
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .match-detail-section.notes .no-notes {

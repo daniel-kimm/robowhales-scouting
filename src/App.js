@@ -28,9 +28,7 @@ function App() {
   useEffect(() => {
     // Check if user is already authenticated
     const authenticated = localStorage.getItem('passwordAuthenticated') === 'true';
-    console.log("Authentication check on load:", authenticated);
     
-    // If authenticated, update state
     if (authenticated) {
       setIsAuthenticated(true);
     }
@@ -38,18 +36,12 @@ function App() {
   
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    console.log("Password submitted:", password);
     
     if (password === correctPassword) {
-      console.log("Password correct! Setting localStorage...");
-      // Set authentication in localStorage
       localStorage.setItem('passwordAuthenticated', 'true');
-      console.log("localStorage set to:", localStorage.getItem('passwordAuthenticated'));
-      
       setIsAuthenticated(true);
       setError('');
     } else {
-      console.log("Password incorrect!");
       setError('Incorrect password. Please try again.');
     }
   };

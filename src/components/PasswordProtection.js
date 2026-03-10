@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 function PasswordProtection({ onPasswordSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const correctPassword = process.env.REACT_APP_PASSWORD;
   
-  useEffect(() => {
-    console.log("PasswordProtection component mounted");
-  }, []);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -20,8 +16,6 @@ function PasswordProtection({ onPasswordSuccess }) {
       setError('Incorrect password. Please try again.');
     }
   };
-
-  console.log("Rendering PasswordProtection component");
   
   return (
     <div className="password-protection">
