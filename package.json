@@ -21,7 +21,7 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.30.0",
     "react-scripts": "5.0.1",
-    "vercel": "^41.4.1",
+    "vercel": "^50.32.4",
     "web-vitals": "^2.1.4",
     "yocto-queue": "^1.2.0"
   },

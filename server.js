@@ -51,7 +51,7 @@ app.post('/api/chat', async (req, res) => {
     console.log("Received message:", message);
     
     // Get relevant data based on the message
-    const relevantData = await retrieveRelevantData(db, message, "testData");
+    const relevantData = await retrieveRelevantData(db, message, "scoutingDataAsheville26");
     
     // Generate AI response
     const aiResponse = await generateAIResponse(message, relevantData);

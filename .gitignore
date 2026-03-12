@@ -25,3 +25,5 @@ yarn-debug.log*
 yarn-error.log*
 
 test-server.js.env
+.vercel
+.env*.local

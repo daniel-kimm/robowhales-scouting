@@ -15,7 +15,7 @@ function DataAnalysis() {
     try {
       setLoading(true);
       
-      const scoutingSnapshot = await getDocs(collection(db, "testData"));
+      const scoutingSnapshot = await getDocs(collection(db, "scoutingDataAsheville26"));
       
       const data = [];
       scoutingSnapshot.forEach((doc) => {

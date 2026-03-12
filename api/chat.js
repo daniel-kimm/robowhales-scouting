@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     
     // Retrieve relevant data based on the user's query
     console.log("Retrieving data for query:", message);
-    const dataPromise = retrieveRelevantData(db, message, "testData");
+    const dataPromise = retrieveRelevantData(db, message, "scoutingDataAsheville26");
     
     const relevantData = await Promise.race([dataPromise, timeoutPromise]);
     console.log("Retrieved data for teams:", Object.keys(relevantData.teams));

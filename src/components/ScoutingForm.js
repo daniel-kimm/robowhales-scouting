@@ -123,7 +123,7 @@ function ScoutingForm() {
       const dataToSubmit = JSON.parse(JSON.stringify(data));
       dataToSubmit.matchInfo.teamNumber = String(dataToSubmit.matchInfo.teamNumber);
 
-      await addDoc(collection(db, "testData"), dataToSubmit);
+      await addDoc(collection(db, "scoutingDataAsheville26"), dataToSubmit);
     } catch (error) {
       console.error("Error adding document: ", error);
       throw error;

@@ -108,7 +108,7 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
     try {
       const updatedMatch = { ...editedMatch };
 
-      const matchRef = doc(db, 'testData', selectedMatchDetails.id);
+      const matchRef = doc(db, 'scoutingDataAsheville26', selectedMatchDetails.id);
       await updateDoc(matchRef, updatedMatch);
 
       setSelectedMatchDetails(updatedMatch);
@@ -127,7 +127,7 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
 
   const handleConfirmDelete = async () => {
     try {
-      const matchRef = doc(db, 'testData', selectedMatchDetails.id);
+      const matchRef = doc(db, 'scoutingDataAsheville26', selectedMatchDetails.id);
       await deleteDoc(matchRef);
       closeModal();
       if (onMatchUpdated) onMatchUpdated();

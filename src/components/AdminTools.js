@@ -48,7 +48,7 @@ function AdminTools() {
   };
   
   // A "preview" function that uses the same detection logic but doesn't delete
-  const identifyDuplicates = async (db, collectionName = "testData") => {
+  const identifyDuplicates = async (db, collectionName = "scoutingDataAsheville26") => {
     // We'll reuse most of the removeDuplicateMatches code but skip the deleteDoc calls
     const matchesSnapshot = await getDocs(collection(db, collectionName));
     const matches = [];
