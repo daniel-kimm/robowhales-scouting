@@ -15,8 +15,8 @@ function ExtendedCounter({ label, value, onChange }) {
       <div className="extended-counter-controls">
         <button type="button" className="ext-btn ext-dec-lg" onClick={() => adjust(-10)}>-10</button>
         <button type="button" className="ext-btn ext-dec-md" onClick={() => adjust(-5)}>-5</button>
-        <button type="button" className="ext-btn ext-dec" onClick={() => adjust(-1)}>-</button>
-        <button type="button" className="ext-btn ext-inc" onClick={() => adjust(1)}>+</button>
+        <button type="button" className="ext-btn ext-dec" onClick={() => adjust(-1)}>-1</button>
+        <button type="button" className="ext-btn ext-inc" onClick={() => adjust(1)}>+1</button>
         <button type="button" className="ext-btn ext-inc-md" onClick={() => adjust(5)}>+5</button>
         <button type="button" className="ext-btn ext-inc-lg" onClick={() => adjust(10)}>+10</button>
       </div>
