@@ -32,6 +32,14 @@ const DEFENSE_RATING_OPTIONS = [
   { value: 'didNotPlayDefense', label: 'Did Not Play Defense' }
 ];
 
+const CYCLE_SPEED_RATING_OPTIONS = [
+  { value: '1', label: '1 (Slow)' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+  { value: '4', label: '4' },
+  { value: '5', label: '5 (Fast)' }
+];
+
 const SPEED_RATING_OPTIONS = [
   { value: '1', label: '1 (Slow)' },
   { value: '2', label: '2' },
@@ -484,6 +492,10 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                       <div className="match-detail-item">
                         <div className="detail-label">Defense Rating:</div>
                         <div className="detail-value">{renderSelect('additional', 'defenseRating', DEFENSE_RATING_OPTIONS)}</div>
+                      </div>
+                      <div className="match-detail-item">
+                        <div className="detail-label">Cycle Speed Rating:</div>
+                        <div className="detail-value">{renderSelect('additional', 'cycleSpeedRating', CYCLE_SPEED_RATING_OPTIONS)}</div>
                       </div>
                       <div className="match-detail-item">
                         <div className="detail-label">Speed Rating:</div>

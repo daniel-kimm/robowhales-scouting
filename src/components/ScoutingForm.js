@@ -34,6 +34,7 @@ function ScoutingForm() {
     additional: {
       driverSkill: 'notObserved',
       defenseRating: 'didNotPlayDefense',
+      cycleSpeedRating: '3',
       speedRating: '3',
       crossedBump: false,
       crossedTrench: false,
@@ -107,6 +108,7 @@ function ScoutingForm() {
       additional: {
         driverSkill: 'notObserved',
         defenseRating: 'didNotPlayDefense',
+        cycleSpeedRating: '3',
         speedRating: '3',
         crossedBump: false,
         crossedTrench: false,
@@ -405,6 +407,30 @@ function ScoutingForm() {
                     value={option.value}
                     checked={formData.additional.defenseRating === option.value}
                     onChange={(e) => handleInputChange('additional', 'defenseRating', e.target.value)}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Cycle Speed Rating:</label>
+            <div className="radio-group">
+              {[
+                { value: '1', label: '1 (Slow)' },
+                { value: '2', label: '2' },
+                { value: '3', label: '3' },
+                { value: '4', label: '4' },
+                { value: '5', label: '5 (Fast)' }
+              ].map((option) => (
+                <label key={option.value} className="radio-option">
+                  <input
+                    type="radio"
+                    name="cycleSpeedRating"
+                    value={option.value}
+                    checked={formData.additional.cycleSpeedRating === option.value}
+                    onChange={(e) => handleInputChange('additional', 'cycleSpeedRating', e.target.value)}
                   />
                   {option.label}
                 </label>

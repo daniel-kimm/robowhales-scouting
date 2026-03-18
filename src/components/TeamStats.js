@@ -150,6 +150,7 @@ function TeamStats({ matches }) {
     // Additional stats
     const driverSkillDistribution = calculateDistribution(teamMatches, 'additional.driverSkill');
     const defenseRatingDistribution = calculateDistribution(teamMatches, 'additional.defenseRating');
+    const avgCycleSpeedRating = calculateFieldAverage(teamMatches, 'additional.cycleSpeedRating');
     const avgSpeedRating = calculateFieldAverage(teamMatches, 'additional.speedRating');
     const crossedBumpPct = calculatePercentage(teamMatches, 'additional.crossedBump');
     const crossedTrenchPct = calculatePercentage(teamMatches, 'additional.crossedTrench');
@@ -202,6 +203,7 @@ function TeamStats({ matches }) {
       additional: {
         driverSkill: driverSkillDistribution,
         defenseRating: defenseRatingDistribution,
+        cycleSpeedRating: avgCycleSpeedRating,
         speedRating: avgSpeedRating,
         crossedBump: crossedBumpPct,
         crossedTrench: crossedTrenchPct,
@@ -530,6 +532,10 @@ function TeamStats({ matches }) {
                       <div className="detailed-value">
                         {formatDistribution(selectedTeam.additional.defenseRating, defenseRatingToLabel)}
                       </div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Cycle Speed Rating</div>
+                      <div className="detailed-value">{selectedTeam.additional.cycleSpeedRating.toFixed(1)} avg</div>
                     </div>
                     <div className="detailed-item">
                       <div className="detailed-label">Speed Rating</div>
