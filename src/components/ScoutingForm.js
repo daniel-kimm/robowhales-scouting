@@ -17,7 +17,8 @@ function ScoutingForm() {
       climbL1: 'notAttempted',
       pickupFromDepot: false,
       pickupFromOutpost: false,
-      pickupFromNeutralZone: false
+      pickupFromNeutralZone: false,
+      notes: ''
     },
     teleop: {
       fuelScored: 0,
@@ -91,7 +92,8 @@ function ScoutingForm() {
         climbL1: 'notAttempted',
         pickupFromDepot: false,
         pickupFromOutpost: false,
-        pickupFromNeutralZone: false
+        pickupFromNeutralZone: false,
+        notes: ''
       },
       teleop: {
         fuelScored: 0,
@@ -268,6 +270,17 @@ function ScoutingForm() {
                 <strong>Pickup From Neutral Zone</strong>
               </label>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="autoNotes">Notes:</label>
+            <textarea
+              id="autoNotes"
+              rows="3"
+              value={formData.autonomous.notes}
+              onChange={(e) => handleInputChange('autonomous', 'notes', e.target.value)}
+              className="full-width"
+            ></textarea>
           </div>
         </div>
 

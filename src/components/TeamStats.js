@@ -159,6 +159,14 @@ function TeamStats({ matches }) {
     const wasDefendedPct = calculatePercentage(teamMatches, 'additional.wasDefended');
     const excessivePenaltiesPct = calculatePercentage(teamMatches, 'additional.excessivePenalties');
 
+    const autoNotes = teamMatches
+      .filter(match => match.autonomous?.notes)
+      .map(match => ({
+        matchNumber: match.matchInfo?.matchNumber || 'Unknown',
+        notes: match.autonomous.notes,
+        scouterInitials: match.matchInfo?.scouterInitials || 'Unknown'
+      }));
+
     const scouterNotes = teamMatches
       .filter(match => match.additional?.onCycleNotes || match.additional?.offCycleNotes || match.additional?.generalNotes || match.additional?.notes)
       .map(match => ({
@@ -186,7 +194,8 @@ function TeamStats({ matches }) {
         climbL1: climbL1Distribution,
         pickupFromDepot: autoPickupDepot,
         pickupFromOutpost: autoPickupOutpost,
-        pickupFromNeutralZone: autoPickupNeutral
+        pickupFromNeutralZone: autoPickupNeutral,
+        notes: autoNotes
       },
       teleop: {
         fuelScored: avgTeleopFuel,
@@ -467,6 +476,16 @@ function TeamStats({ matches }) {
                       <div className="detailed-value">{selectedTeam.auto.pickupFromNeutralZone.toFixed(0)}%</div>
                     </div>
                   </div>
+                  {selectedTeam.auto.notes && selectedTeam.auto.notes.length > 0 && (
+                    <div className="notes-container" style={{ marginTop: '10px' }}>
+                      <div className="detailed-label" style={{ marginBottom: '5px' }}>Notes</div>
+                      {selectedTeam.auto.notes.map((note, index) => (
+                        <div key={index} className="note-item">
+                          <div className="note-text"><strong>Match {note.matchNumber}</strong> ({note.scouterInitials}): {note.notes}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Teleop */}
