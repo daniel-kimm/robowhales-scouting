@@ -405,6 +405,10 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                         <div className="detail-value">{renderField('autonomous', 'passFromNeutralZone')}</div>
                       </div>
                       <div className="match-detail-item">
+                        <div className="detail-label">Push From Neutral Zone:</div>
+                        <div className="detail-value">{renderField('autonomous', 'pushFromNeutralZone')}</div>
+                      </div>
+                      <div className="match-detail-item">
                         <div className="detail-label">Climb L1:</div>
                         <div className="detail-value">{renderSelect('autonomous', 'climbL1', AUTO_CLIMB_OPTIONS)}</div>
                       </div>
@@ -434,6 +438,10 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                       <div className="match-detail-item">
                         <div className="detail-label">Pass From Neutral Zone:</div>
                         <div className="detail-value">{renderField('teleop', 'passFromNeutralZone')}</div>
+                      </div>
+                      <div className="match-detail-item">
+                        <div className="detail-label">Push From Neutral Zone:</div>
+                        <div className="detail-value">{renderField('teleop', 'pushFromNeutralZone')}</div>
                       </div>
                       <div className="match-detail-item">
                         <div className="detail-label">Pass From Opp Alliance Zone:</div>

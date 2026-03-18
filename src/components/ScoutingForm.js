@@ -13,6 +13,7 @@ function ScoutingForm() {
     autonomous: {
       fuelScored: 0,
       passFromNeutralZone: 0,
+      pushFromNeutralZone: 0,
       climbL1: 'notAttempted',
       pickupFromDepot: false,
       pickupFromOutpost: false,
@@ -21,6 +22,7 @@ function ScoutingForm() {
     teleop: {
       fuelScored: 0,
       passFromNeutralZone: 0,
+      pushFromNeutralZone: 0,
       passFromOppAllianceZone: 0,
       pickupFromDepot: false,
       pickupFromOutpost: false,
@@ -84,6 +86,7 @@ function ScoutingForm() {
       autonomous: {
         fuelScored: 0,
         passFromNeutralZone: 0,
+        pushFromNeutralZone: 0,
         climbL1: 'notAttempted',
         pickupFromDepot: false,
         pickupFromOutpost: false,
@@ -92,6 +95,7 @@ function ScoutingForm() {
       teleop: {
         fuelScored: 0,
         passFromNeutralZone: 0,
+        pushFromNeutralZone: 0,
         passFromOppAllianceZone: 0,
         pickupFromDepot: false,
         pickupFromOutpost: false,
@@ -202,6 +206,12 @@ function ScoutingForm() {
             onChange={(value) => handleInputChange('autonomous', 'passFromNeutralZone', value)}
           />
 
+          <ExtendedCounter
+            label="Push From Neutral Zone"
+            value={formData.autonomous.pushFromNeutralZone}
+            onChange={(value) => handleInputChange('autonomous', 'pushFromNeutralZone', value)}
+          />
+
           <div className="form-group">
             <label>Climb L1:</label>
             <div className="radio-group">
@@ -273,6 +283,12 @@ function ScoutingForm() {
             label="Pass From Neutral Zone"
             value={formData.teleop.passFromNeutralZone}
             onChange={(value) => handleInputChange('teleop', 'passFromNeutralZone', value)}
+          />
+
+          <ExtendedCounter
+            label="Push From Neutral Zone"
+            value={formData.teleop.pushFromNeutralZone}
+            onChange={(value) => handleInputChange('teleop', 'pushFromNeutralZone', value)}
           />
 
           <ExtendedCounter

@@ -129,6 +129,7 @@ function TeamStats({ matches }) {
     // Detailed auto averages
     const avgAutoFuel = calculateFieldAverage(teamMatches, 'autonomous.fuelScored');
     const avgAutoPass = calculateFieldAverage(teamMatches, 'autonomous.passFromNeutralZone');
+    const avgAutoPush = calculateFieldAverage(teamMatches, 'autonomous.pushFromNeutralZone');
     const climbL1Distribution = calculateDistribution(teamMatches, 'autonomous.climbL1');
     const autoPickupDepot = calculatePercentage(teamMatches, 'autonomous.pickupFromDepot');
     const autoPickupOutpost = calculatePercentage(teamMatches, 'autonomous.pickupFromOutpost');
@@ -137,6 +138,7 @@ function TeamStats({ matches }) {
     // Detailed teleop averages
     const avgTeleopFuel = calculateFieldAverage(teamMatches, 'teleop.fuelScored');
     const avgTeleopPass = calculateFieldAverage(teamMatches, 'teleop.passFromNeutralZone');
+    const avgTeleopPush = calculateFieldAverage(teamMatches, 'teleop.pushFromNeutralZone');
     const avgTeleopOppPass = calculateFieldAverage(teamMatches, 'teleop.passFromOppAllianceZone');
     const teleopPickupDepot = calculatePercentage(teamMatches, 'teleop.pickupFromDepot');
     const teleopPickupOutpost = calculatePercentage(teamMatches, 'teleop.pickupFromOutpost');
@@ -179,6 +181,7 @@ function TeamStats({ matches }) {
       auto: {
         fuelScored: avgAutoFuel,
         passFromNeutralZone: avgAutoPass,
+        pushFromNeutralZone: avgAutoPush,
         climbL1: climbL1Distribution,
         pickupFromDepot: autoPickupDepot,
         pickupFromOutpost: autoPickupOutpost,
@@ -187,6 +190,7 @@ function TeamStats({ matches }) {
       teleop: {
         fuelScored: avgTeleopFuel,
         passFromNeutralZone: avgTeleopPass,
+        pushFromNeutralZone: avgTeleopPush,
         passFromOppAllianceZone: avgTeleopOppPass,
         pickupFromDepot: teleopPickupDepot,
         pickupFromOutpost: teleopPickupOutpost,
@@ -439,6 +443,10 @@ function TeamStats({ matches }) {
                       <div className="detailed-value">{selectedTeam.auto.passFromNeutralZone.toFixed(1)} avg</div>
                     </div>
                     <div className="detailed-item">
+                      <div className="detailed-label">Push From Neutral Zone</div>
+                      <div className="detailed-value">{selectedTeam.auto.pushFromNeutralZone.toFixed(1)} avg</div>
+                    </div>
+                    <div className="detailed-item">
                       <div className="detailed-label">Climb L1</div>
                       <div className="detailed-value">
                         {formatDistribution(selectedTeam.auto.climbL1, climbToLabel)}
@@ -470,6 +478,10 @@ function TeamStats({ matches }) {
                     <div className="detailed-item">
                       <div className="detailed-label">Pass From Neutral Zone</div>
                       <div className="detailed-value">{selectedTeam.teleop.passFromNeutralZone.toFixed(1)} avg</div>
+                    </div>
+                    <div className="detailed-item">
+                      <div className="detailed-label">Push From Neutral Zone</div>
+                      <div className="detailed-value">{selectedTeam.teleop.pushFromNeutralZone.toFixed(1)} avg</div>
                     </div>
                     <div className="detailed-item">
                       <div className="detailed-label">Pass From Opp Alliance Zone</div>
