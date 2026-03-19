@@ -273,7 +273,7 @@ function ScoutingForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="autoNotes">Notes:</label>
+            <label htmlFor="autoNotes">Auto Path Notes:</label>
             <textarea
               id="autoNotes"
               rows="3"

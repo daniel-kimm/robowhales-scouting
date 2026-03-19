@@ -433,7 +433,7 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                         <div className="detail-value">{renderField('autonomous', 'pickupFromNeutralZone', 'checkbox')}</div>
                       </div>
                       <div className="match-detail-item full-width-item">
-                        <div className="detail-label">Notes:</div>
+                        <div className="detail-label">Auto Path Notes:</div>
                         <div className="detail-value">{renderField('autonomous', 'notes', 'textarea')}</div>
                       </div>
                     </div>

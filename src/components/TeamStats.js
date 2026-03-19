@@ -478,7 +478,7 @@ function TeamStats({ matches }) {
                   </div>
                   {selectedTeam.auto.notes && selectedTeam.auto.notes.length > 0 && (
                     <div className="notes-container" style={{ marginTop: '10px' }}>
-                      <div className="detailed-label" style={{ marginBottom: '5px' }}>Notes</div>
+                      <div className="detailed-label" style={{ marginBottom: '5px' }}>Auto Path Notes</div>
                       {selectedTeam.auto.notes.map((note, index) => (
                         <div key={index} className="note-item">
                           <div className="note-text"><strong>Match {note.matchNumber}</strong> ({note.scouterInitials}): {note.notes}</div>
