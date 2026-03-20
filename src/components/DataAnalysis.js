@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import TeamStats from './TeamStats';
 import MatchTable from './MatchTable';
 import { db } from '../firebase.client.js';
@@ -10,6 +11,7 @@ function DataAnalysis() {
   const [teamFilter, setTeamFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMatchHistory, setShowMatchHistory] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -187,8 +189,11 @@ function DataAnalysis() {
       
       <TeamStats matches={filteredData} />
       
-      <h2>Match History</h2>
-      <MatchTable matches={filteredData} onMatchUpdated={fetchData} />
+      <div className="collapsible-header" onClick={() => setShowMatchHistory(!showMatchHistory)}>
+        {showMatchHistory ? <ChevronDown size={22} /> : <ChevronRight size={22} />}
+        <h2>Match History</h2>
+      </div>
+      {showMatchHistory && <MatchTable matches={filteredData} onMatchUpdated={fetchData} />}
       
       {/* New export button */}
       {filteredData.length > 0 && (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -74,6 +74,7 @@ function TeamStats({ matches }) {
   });
   
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [showTeamCards, setShowTeamCards] = useState(false);
   
   if (!matches || matches.length === 0) {
     return (
@@ -382,7 +383,11 @@ function TeamStats({ matches }) {
       </div>
       
       {/* Team Stats Cards */}
-      <div className="team-stats-cards">
+      <div className="collapsible-header" onClick={() => setShowTeamCards(!showTeamCards)}>
+        {showTeamCards ? <ChevronDown size={22} /> : <ChevronRight size={22} />}
+        <h2>Individual Team Stats</h2>
+      </div>
+      {showTeamCards && <div className="team-stats-cards">
         {teamStats.map(stats => (
           <div 
             key={stats.teamNumber} 
@@ -420,7 +425,7 @@ function TeamStats({ matches }) {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
       
       {/* Detailed Team Stats Modal */}
       {selectedTeam && (
