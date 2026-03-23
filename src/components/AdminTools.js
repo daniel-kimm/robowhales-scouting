@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { getFirestore, getDocs, collection } from 'firebase/firestore';
+import { getFirestore, getDocs, collection, deleteDoc, doc } from 'firebase/firestore';
 import { removeDuplicateMatches } from '../utils/duplicateRemover';
 import './AdminTools.css';
+
+const COLLECTION_NAME = 'scoutingDataAsheville26';
 
 function AdminTools() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const [dryRun, setDryRun] = useState(true); // Default to dry run for safety
+  const [dryRun, setDryRun] = useState(true);
+  const [clearLoading, setClearLoading] = useState(false);
+  const [clearResult, setClearResult] = useState(null);
+  const [clearError, setClearError] = useState(null);
   
   const handleRemoveDuplicates = async () => {
     const confirmMessage = dryRun 
@@ -47,6 +52,37 @@ function AdminTools() {
     }
   };
   
+  const handleClearCollection = async () => {
+    if (!window.confirm(`WARNING: This will permanently delete ALL data in "${COLLECTION_NAME}". This cannot be undone. Are you sure?`)) {
+      return;
+    }
+    if (!window.confirm('Are you ABSOLUTELY sure? Type "yes" in the next prompt to confirm.')) {
+      return;
+    }
+    const typed = window.prompt(`Type "${COLLECTION_NAME}" to confirm deletion:`);
+    if (typed !== COLLECTION_NAME) {
+      alert('Collection name did not match. Cancelled.');
+      return;
+    }
+    
+    setClearLoading(true);
+    setClearError(null);
+    setClearResult(null);
+    
+    try {
+      const db = getFirestore();
+      const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+      const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, COLLECTION_NAME, d.id)));
+      await Promise.all(deletePromises);
+      setClearResult(`Successfully deleted ${snapshot.size} documents from ${COLLECTION_NAME}.`);
+    } catch (err) {
+      setClearError(err.message);
+      console.error('Error clearing collection:', err);
+    } finally {
+      setClearLoading(false);
+    }
+  };
+
   // A "preview" function that uses the same detection logic but doesn't delete
   const identifyDuplicates = async (db, collectionName = "scoutingDataAsheville26") => {
     // We'll reuse most of the removeDuplicateMatches code but skip the deleteDoc calls
@@ -324,6 +360,33 @@ function AdminTools() {
                 </div>
               </>
             )}
+          </div>
+        )}
+      </div>
+      
+      <div className="card">
+        <h2>Clear Collection</h2>
+        <p style={{ color: '#666', marginBottom: '15px' }}>
+          This will permanently delete <strong>all</strong> documents in the collection.
+        </p>
+        
+        <button 
+          onClick={handleClearCollection} 
+          disabled={clearLoading}
+          className="danger-button"
+        >
+          {clearLoading ? 'Clearing...' : `Clear All Data`}
+        </button>
+        
+        {clearError && (
+          <div className="error-message">
+            Error: {clearError}
+          </div>
+        )}
+        
+        {clearResult && (
+          <div className="result-box">
+            <p>{clearResult}</p>
           </div>
         )}
       </div>
