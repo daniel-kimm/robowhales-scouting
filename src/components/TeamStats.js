@@ -165,7 +165,7 @@ function TeamStats({ matches }) {
       .map(match => ({
         matchNumber: match.matchInfo?.matchNumber || 'Unknown',
         notes: match.autonomous.notes,
-        scouterInitials: match.matchInfo?.scouterInitials || 'Unknown'
+        scouterName: match.matchInfo?.scouterName || match.matchInfo?.scouterInitials || 'Unknown'
       }));
 
     const scouterNotes = teamMatches
@@ -176,7 +176,7 @@ function TeamStats({ matches }) {
         offCycleNotes: match.additional?.offCycleNotes || '',
         generalNotes: match.additional?.generalNotes || '',
         notes: match.additional?.notes || '',
-        scouterInitials: match.matchInfo?.scouterInitials || 'Unknown'
+        scouterName: match.matchInfo?.scouterName || match.matchInfo?.scouterInitials || 'Unknown'
       }));
 
     return {
@@ -486,7 +486,7 @@ function TeamStats({ matches }) {
                       <div className="detailed-label" style={{ marginBottom: '5px' }}>Auto Path Notes</div>
                       {selectedTeam.auto.notes.map((note, index) => (
                         <div key={index} className="note-item">
-                          <div className="note-text"><strong>Match {note.matchNumber}</strong> ({note.scouterInitials}): {note.notes}</div>
+                          <div className="note-text"><strong>Match {note.matchNumber}</strong> ({note.scouterName}): {note.notes}</div>
                         </div>
                       ))}
                     </div>
@@ -599,7 +599,7 @@ function TeamStats({ matches }) {
                     <div className="notes-container">
                       {selectedTeam.scouterNotes.map((note, index) => (
                         <div key={index} className="note-item">
-                          <div className="note-match"><strong>Match {note.matchNumber}</strong> — Scouted by: {note.scouterInitials}</div>
+                          <div className="note-match"><strong>Match {note.matchNumber}</strong> — Scouted by: {note.scouterName}</div>
                           <div className="note-details">
                             {note.onCycleNotes && (
                               <div className="note-text"><strong>On Cycle:</strong> {note.onCycleNotes}</div>

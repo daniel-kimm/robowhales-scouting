@@ -69,7 +69,7 @@ function DataAnalysis() {
     filteredData.forEach(match => {
       const teamNumber = match.matchInfo?.teamNumber || 'Unknown Team';
       const matchNumber = match.matchInfo?.matchNumber || 'Unknown Match';
-      const scouterInitials = match.matchInfo?.scouterInitials || match.scouterInitials || 'Unknown';
+      const scouterName = match.matchInfo?.scouterName || match.matchInfo?.scouterInitials || 'Unknown';
       
       const onCycle = match.additional?.onCycleNotes || '';
       const offCycle = match.additional?.offCycleNotes || '';
@@ -83,7 +83,7 @@ function DataAnalysis() {
         notesByTeam[teamNumber] = [];
       }
       
-      const lines = [`Match ${matchNumber} (${scouterInitials}):`];
+      const lines = [`Match ${matchNumber} (${scouterName}):`];
       if (onCycle.trim()) lines.push(`    On Cycle: ${onCycle}`);
       if (offCycle.trim()) lines.push(`    Off Cycle: ${offCycle}`);
       if (general.trim()) lines.push(`    General: ${general}`);

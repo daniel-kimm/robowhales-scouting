@@ -293,7 +293,7 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                           <td className={match.matchInfo?.alliance || 'unknown'}>
                             {match.matchInfo?.alliance || 'Unknown'}
                           </td>
-                          <td>{match.matchInfo?.scouterInitials || '—'}</td>
+                          <td>{match.matchInfo?.scouterName || match.matchInfo?.scouterInitials || '—'}</td>
                           <td>{getAutoPoints(match)}</td>
                           <td>{getTeleopPoints(match)}</td>
                           <td>{getEndgameLabel(match)}</td>
@@ -388,8 +388,8 @@ function MatchTable({ matches, onSelectMatch, onMatchUpdated }) {
                         </div>
                       </div>
                       <div className="match-detail-item">
-                        <div className="detail-label">Scouter:</div>
-                        <div className="detail-value">{renderField('matchInfo', 'scouterInitials', 'text')}</div>
+                        <div className="detail-label">Scouter Name:</div>
+                        <div className="detail-value">{renderField('matchInfo', 'scouterName', 'text')}</div>
                       </div>
                       <div className="match-detail-item">
                         <div className="detail-label">Timestamp:</div>
