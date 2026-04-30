@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import ExtendedCounter from './ExtendedCounter';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { enqueueSubmission, tryUpload, flushQueue } from '../utils/offlineQueue';
 
 function ScoutingForm() {
+  const [submitState, setSubmitState] = useState({ status: 'idle', message: '' });
   const [formData, setFormData] = useState({
     matchInfo: {
       matchNumber: '',
@@ -62,19 +63,56 @@ function ScoutingForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Build the submission payload and normalize any non-string fields the
+    // way the original code did (so existing analysis code keeps working).
     const submissionData = {
       ...formData,
       timestamp: new Date().toISOString()
     };
-
+    let cleaned;
     try {
-      await saveMatchData(submissionData);
-      alert('Match data submitted successfully!');
-      resetForm();
-    } catch (error) {
-      console.error("Error submitting data: ", error);
-      alert('Error submitting data: ' + error.message);
+      cleaned = JSON.parse(JSON.stringify(submissionData));
+      cleaned.matchInfo.teamNumber = String(cleaned.matchInfo.teamNumber);
+    } catch (err) {
+      alert('Could not prepare match data: ' + (err.message || err));
+      return;
     }
+
+    // STEP 1 (critical): persist locally BEFORE any network call. If this
+    // fails the scouter must NOT lose their data, so we surface a hard error
+    // and bail out without resetting the form.
+    let entry;
+    try {
+      entry = enqueueSubmission(cleaned);
+    } catch (err) {
+      console.error('Local save failed:', err);
+      alert(
+        'COULD NOT SAVE MATCH LOCALLY.\n\n' +
+          (err.message || err) +
+          '\n\nDo NOT leave this page. Try Submit again, or screenshot the form as a backup.'
+      );
+      return;
+    }
+
+    // The data is now safe on disk. We can safely reset the form.
+    resetForm();
+    setSubmitState({ status: 'uploading', message: 'Saved on device. Uploading…' });
+
+    // STEP 2: try to upload. tryUpload handles its own error tracking and
+    // queue removal on success — it never throws.
+    const uploaded = await tryUpload(entry);
+    if (uploaded) {
+      setSubmitState({ status: 'uploaded', message: 'Match uploaded successfully.' });
+      // Opportunistically flush anything else that was waiting.
+      flushQueue().catch((err) => console.error('Background flush error:', err));
+    } else {
+      setSubmitState({
+        status: 'queued',
+        message: 'Saved on this device. Will upload automatically when online.'
+      });
+    }
+
+    setTimeout(() => setSubmitState({ status: 'idle', message: '' }), 5000);
   };
 
   const resetForm = () => {
@@ -125,22 +163,37 @@ function ScoutingForm() {
     });
   };
 
-  const saveMatchData = async (data) => {
-    const db = getFirestore();
-    try {
-      const dataToSubmit = JSON.parse(JSON.stringify(data));
-      dataToSubmit.matchInfo.teamNumber = String(dataToSubmit.matchInfo.teamNumber);
-
-      await addDoc(collection(db, "scoutingDataAsheville26"), dataToSubmit);
-    } catch (error) {
-      console.error("Error adding document: ", error);
-      throw error;
-    }
-  };
-
   return (
     <div className="container">
       <h1>Match Scouting Form</h1>
+
+      {submitState.status !== 'idle' && (
+        <div
+          className={`submit-status submit-status--${submitState.status}`}
+          role="status"
+          aria-live="polite"
+          style={{
+            padding: '10px 14px',
+            borderRadius: 8,
+            margin: '0 0 16px',
+            fontWeight: 600,
+            background:
+              submitState.status === 'uploaded'
+                ? '#def7e2'
+                : submitState.status === 'queued'
+                ? '#fff4cc'
+                : '#e3eefc',
+            color:
+              submitState.status === 'uploaded'
+                ? '#1f5a2c'
+                : submitState.status === 'queued'
+                ? '#6a5200'
+                : '#1f3a5a'
+          }}
+        >
+          {submitState.message}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* Match Info */}

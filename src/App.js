@@ -5,6 +5,7 @@ import DataAnalysis from './components/DataAnalysis';
 import ChatBot from './components/ChatBot';
 import TestChat from './components/TestChat';
 import AdminTools from './components/AdminTools';
+import PendingSubmissionsBanner from './components/PendingSubmissionsBanner';
 import './App.css';
 
 // ScrollToTop component
@@ -153,8 +154,9 @@ function App() {
             </div>
           </div>
         )}
-        
+
         <main>
+          {isAuthenticated && <PendingSubmissionsBanner />}
           <Routes>
             <Route path="/" element={<ProtectedRoute element={<ScoutingForm />} />} />
             <Route path="/analysis" element={<ProtectedRoute element={<DataAnalysis />} />} />

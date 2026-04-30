@@ -1,0 +1,125 @@
+.pending-banner {
+  position: sticky;
+  top: 88px;
+  z-index: 100;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .pending-banner {
+    top: 72px;
+  }
+}
+
+.pending-banner--offline {
+  background: #fde2e2;
+  color: #7a1f1f;
+}
+
+.pending-banner--pending {
+  background: #fff4cc;
+  color: #6a5200;
+}
+
+.pending-banner--online {
+  background: #def7e2;
+  color: #1f5a2c;
+}
+
+.pending-banner__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pending-banner__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pending-banner__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+
+.pending-banner__sub {
+  opacity: 0.85;
+  font-weight: normal;
+}
+
+.pending-banner__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pending-banner__btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.6);
+  color: inherit;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pending-banner__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pending-banner__btn--ghost {
+  background: transparent;
+}
+
+.pending-banner__result {
+  margin-top: 6px;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.pending-banner__result--error {
+  color: #7a1f1f;
+}
+
+.pending-banner__list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+}
+
+.pending-banner__item {
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+}
+
+.pending-banner__item:last-child {
+  border-bottom: none;
+}
+
+.pending-banner__meta {
+  opacity: 0.75;
+  font-size: 12px;
+}
